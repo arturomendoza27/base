@@ -15,14 +15,23 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::with('roles:id,name')
+        $users = User::when($request->search, function ($query) use ($request) {
+            $query->where('name', 'like', "%{$request->search}%")
+                ->orWhere('email', 'like', "%{$request->search}%");
+        })
+            ->with('roles:id,name')
             ->orderBy('created_at', 'desc')
-            ->paginate(5);
+            ->latest()
+            ->paginate(5)
+            ->withQueryString();
 
         return Inertia::render('Users/Index', [
             'users' => $users,
+            'filters' => [
+                'search' => $request->search,
+            ],
         ]);
     }
 
@@ -66,7 +75,7 @@ class UserController extends Controller
             $user->syncRoles($validated['roles']);
 
             DB::commit();
-            
+
             return redirect()
                 ->route('users.index')
                 ->with('success', 'Usuario creado con Exito.');

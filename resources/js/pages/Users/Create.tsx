@@ -158,9 +158,9 @@ export default function Create({ roles }: CreateProps) {
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor="address">
+                                        {/* <Label htmlFor="address">
                                             Dirección Completa <span className="text-destructive">*</span>
-                                        </Label>
+                                        </Label> */}
                                         {roles.map((role) =>
                                             <label key={role} className="flex items-center gap-3 cursor-pointer bg-gray-50 hover:bg-gray-100 rounded px-3 py-2 transition">
                                                 <input
@@ -186,7 +186,7 @@ export default function Create({ roles }: CreateProps) {
                                     type="button"
                                     variant="outline"
                                     onClick={handleCancel}
-                                    className="flex items-center justify-center px-4 py-2 h-10 text-sm font-medium rounded-md"
+                                    className="flex items-center justify-center px-4 py-2 h-10 text-sm font-medium rounded-md cursor-pointer"
                                 >
                                     <XIcon className="h-4 w-4 mr-2" />
                                     Cancelar
@@ -194,10 +194,11 @@ export default function Create({ roles }: CreateProps) {
 
                                 <Button
                                     type="submit"
-                                    className="flex items-center justify-center px-4 py-2 h-10 text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 rounded-md"
+                                     disabled={processing}
+                                    className="flex items-center justify-center px-4 py-2 h-10 text-sm font-medium bg-indigo-500 text-white hover:bg-indigo-600 rounded-md cursor-pointer"
                                 >
                                     <SaveIcon className="w-4 h-4 mr-2" />
-                                    Guardar Usuario
+                                    {processing ? 'Guardando...' : ' Guardar'}
                                 </Button>
                             </div>
                         </div>

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -47,7 +48,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('roles', RoleController::class)
         ->only(['index', 'show'])
         ->middleware('permission:roles.view|roles.create|roles.edit|roles.delete');
+
+ 
 });
 
-require __DIR__.'/settings.php';
-require __DIR__.'/auth.php';
+require __DIR__ . '/settings.php';
+require __DIR__ . '/auth.php';
+require __DIR__ . '/clientes.php';
+require __DIR__ . '/tarifas.php';
+require __DIR__ . '/predios.php';

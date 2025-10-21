@@ -1,97 +1,94 @@
+import { BreadcrumbItem, Cliente, Filters, PaginatedData, Tarifa } from '@/types';
 import React, { useState } from 'react';
-import AppLayout from '@/layouts/app-layout';
-import Pagination from '@/components/pagination';
-import { can } from '@/lib/can';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { EditIcon, EyeIcon, MoreHorizontalIcon, PlusIcon, SearchIcon, TrashIcon } from 'lucide-react';
-import { Filters, type BreadcrumbItem, type PaginatedData, type User } from '@/types';
-import { Head, Link, router, useForm } from '@inertiajs/react';
 import { DashboardLayout } from '../dashboard/dashboard-layout';
+import { can } from '@/lib/can';
+import { Head, Link, router, useForm } from '@inertiajs/react';
+import { EditIcon, EyeIcon, MoreHorizontalIcon, PlusIcon, SearchIcon, TrashIcon } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-
-
-
+import { formatoPesos } from '@/lib/fomato_numeros';
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
-    title: 'Users',
-    href: '/users',
+    title: 'Tarifas',
+    href: '/tarifas',
   },
 ];
 
 
 
 interface IndexProps {
-  users: PaginatedData<User>;
+  datos: PaginatedData<Tarifa>;
   filters: Filters;
 }
-export default function Index({ users, filters }: IndexProps) {
 
-  const [user, setUsers] = useState(users.data);
+
+
+export default function Index({ datos, filters }: IndexProps) {
+  const [tarifa, setTarifa] = useState(datos.data);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [userToDelete, setUserToDelete] = useState<number | null>(null)
+  const [idToDelete, setIdToDelete] = useState<number | null>(null)
   // Filter users based on search term
-  const {data, setData} = useForm({
-    search: filters.search || ''
-  });  
+  const { data, setData } = useForm({
+    search: filters.search || '',
+  });
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const userInput = e.target.value.toLowerCase()
+    setData('search', userInput)
+    const queryString = userInput ? { search: userInput } : {}
 
-const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const userInput = e.target.value.toLowerCase()
-  setData('search', userInput)
-  const queryString = userInput ? {search: userInput} :{}
-
-    router.get('/users', queryString, {
+    router.get('/tarifas', queryString, {
       preserveState: true,
       preserveScroll: true,
     });
-}
-
-  {/* Handle Delete User */ }
+  }
+  {/* Handle Delete */ }
   const handleDeleteConfirm = () => {
-    if (userToDelete) {
-      setUsers(user.filter((t) => t.id !== userToDelete))
-      router.delete(`/users/${userToDelete}`, {
+    if (idToDelete) {
+      setTarifa(tarifa.filter((t) => t.id !== idToDelete))
+      router.delete(`/tarifas/${idToDelete}`, {
         preserveScroll: true,
       });
-      setUserToDelete(null)
+      setIdToDelete(null)
       setDeleteDialogOpen(false)
     }
   }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-balance">Gestión de Usuarios</h1>
-            <p className="text-muted-foreground">Administra los usuarios del sistema de acueducto</p>
+            <h1 className="text-3xl font-bold text-balance">Gestión de las Tarifas</h1>
+            <p className="text-muted-foreground">Administra las tarifas</p>
           </div>
-          {can('users.create') && (
+          <div className="flex space-x-2">
+            {can('tarifas.create') && (
               <Button
-                        type="button"
-                        className="bg-black text-white hover:bg-gray-900 cursor-pointer transition"
-                        onClick={() => (window.location.href = '/users/create')}
-                      >
-                        <PlusIcon className="w-4 h-4 mr-2" />
-                        Nuevo Usuario
-                      </Button>
-          )}
+                type="button"
+                className="bg-black text-white hover:bg-gray-900 cursor-pointer transition"
+                onClick={() => (window.location.href = '/tarifas/create')}
+              >
+                <PlusIcon className="w-4 h-4 mr-2" />
+                Nueva Tarifa
+              </Button>
+            )}
+          </div>
         </div>
-
         <Card>
           <CardHeader>
-            <CardTitle>Lista de Usuarios</CardTitle>
+            <CardTitle>Lista de Tarifas</CardTitle>
             <div className="flex items-center gap-4">
               <div className="relative flex-1 max-w-sm">
                 <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                type='text'
+                  type='text'
                   name='search'
-                  placeholder="Buscar usuarios..."
+                  placeholder="Buscar tarifas..."
                   onChange={handleSearchChange}
                   value={data.search}
                   className="pl-10"
@@ -105,39 +102,36 @@ const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Usuario</TableHead>
-                    <TableHead>Rol</TableHead>
+                    <TableHead>Nombre</TableHead>
+                    <TableHead>Valor</TableHead>
+                    <TableHead>Estado</TableHead>
                     <TableHead className="w-[70px]">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-
-
-                  {users.data.length > 0 ? (
-                  users.data.map((user) => (
-                      <TableRow key={user.id}>
+                  {datos.data.length > 0 ? (
+                    datos.data.map((dato) => (
+                      <TableRow key={dato.id}>
                         <TableCell>
                           <div>
-                            <div className="font-medium">{user.name}</div>
-                            <div className="text-sm text-muted-foreground">{user.email}</div>
+                            <div className="font-medium">{dato.nombre}</div>
+
                           </div>
                         </TableCell>
-                        {/* <TableCell className="text-sm">{user.email}</TableCell> */}
                         <TableCell>
-                          {user.roles && user.roles.length > 0 ? (
-                            <div className="flex flex-wrap gap-1">
-                              {user.roles.map((role) => (
-
-                                <code key={role.id} className="bg-muted px-2 py-1 rounded text-sm"> {role.name}</code>
-
-                              ))}
-                            </div>
-                          ) : (
-                            <span className="text-gray-400">No roles</span>
-                          )}
-
+                          <div className="text-sm text-muted-foreground">{formatoPesos(dato.valor)}</div>
                         </TableCell>
-
+                        <TableCell>
+                          {dato.estado === "activa" ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              Activa
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                              Incativa
+                            </span>
+                          )}
+                        </TableCell>
                         <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -146,10 +140,10 @@ const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              {can('users.show') && (
+                              {can('tarifas.show') && (
                                 <DropdownMenuItem asChild>
                                   <Link
-                                    href={`/users/${user.id}`}
+                                    href={`/tarifas/${dato.id}`}
                                     className="flex items-center"
                                   >
                                     <EyeIcon className="h-4 w-4 mr-2" />
@@ -158,10 +152,10 @@ const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                                 </DropdownMenuItem>
                               )}
 
-                              {can('users.edit') && (
+                              {can('tarifas.edit') && (
                                 <DropdownMenuItem asChild>
                                   <Link
-                                    href={`/users/${user.id}/edit`}
+                                    href={`/tarifas/${dato.id}/edit`}
                                     className="flex items-center"
                                   >
                                     <EditIcon className="h-4 w-4 mr-2" />
@@ -170,11 +164,11 @@ const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                                 </DropdownMenuItem>
                               )}
 
-                              {can('users.delete') && (
+                              {can('tarifas.delete') && (
                                 <DropdownMenuItem asChild>
                                   <button
                                     onClick={() => {
-                                      setUserToDelete(user.id)
+                                      setIdToDelete(dato.id)
                                       setDeleteDialogOpen(true)
                                     }}
                                     className="group flex w-full items-center text-red-600 transition-colors duration-200 hover:text-red-700 focus:outline-none"
@@ -193,14 +187,14 @@ const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                   ) : (
                     <TableRow>
                       <TableCell colSpan={4} className="text-center py-4">
-                        No users found.
+                        Datos no encontrados.
                       </TableCell>
                     </TableRow>
                   )}
                 </TableBody>
               </Table>
               <div className="flex flex-wrap items-center justify-center gap-1">
-                {users.links.map((link, index) => (
+                {datos.links.map((link, index) => (
                   <Link
                     key={index}
                     href={link.url ?? '#'}
@@ -223,7 +217,7 @@ const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
           <AlertDialogHeader>
             <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción no se puede deshacer. EL usuario será eliminado permanentemente del sistema.
+              Esta acción no se puede deshacer. La tarifa sera eliminada permanentemente del sistema.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -232,7 +226,8 @@ const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </DashboardLayout>
-  );
-}
 
+    </DashboardLayout >
+  );
+
+}

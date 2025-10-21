@@ -1,95 +1,125 @@
+import { BreadcrumbItem, Cliente, Filters, PaginatedData } from '@/types';
 import React, { useState } from 'react';
-import AppLayout from '@/layouts/app-layout';
-import Pagination from '@/components/pagination';
-import { can } from '@/lib/can';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { EditIcon, EyeIcon, MoreHorizontalIcon, PlusIcon, SearchIcon, TrashIcon } from 'lucide-react';
-import { Filters, type BreadcrumbItem, type PaginatedData, type User } from '@/types';
-import { Head, Link, router, useForm } from '@inertiajs/react';
 import { DashboardLayout } from '../dashboard/dashboard-layout';
+import { can } from '@/lib/can';
+import { Head, Link, router, useForm } from '@inertiajs/react';
+import { EditIcon, EyeIcon, MoreHorizontalIcon, PlusIcon, SearchIcon, TrashIcon } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-
-
-
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
-    title: 'Users',
-    href: '/users',
+    title: 'Clientes',
+    href: '/clientes',
   },
 ];
 
 
 
 interface IndexProps {
-  users: PaginatedData<User>;
+  clientes: PaginatedData<Cliente>;
   filters: Filters;
 }
-export default function Index({ users, filters }: IndexProps) {
 
-  const [user, setUsers] = useState(users.data);
+export default function Index({ clientes, filters }: IndexProps) {
+  const [cliente, setCliente] = useState(clientes.data);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [userToDelete, setUserToDelete] = useState<number | null>(null)
+  const [idToDelete, setIdToDelete] = useState<number | null>(null)
   // Filter users based on search term
-  const {data, setData} = useForm({
+  const { data, setData } = useForm({
     search: filters.search || ''
-  });  
+  });
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const userInput = e.target.value.toLowerCase()
+    setData('search', userInput)
+    const queryString = userInput ? { search: userInput } : {}
 
-const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const userInput = e.target.value.toLowerCase()
-  setData('search', userInput)
-  const queryString = userInput ? {search: userInput} :{}
-
-    router.get('/users', queryString, {
+    router.get('/clientes', queryString, {
       preserveState: true,
       preserveScroll: true,
     });
-}
-
-  {/* Handle Delete User */ }
+  }
+  {/* Handle Delete */ }
   const handleDeleteConfirm = () => {
-    if (userToDelete) {
-      setUsers(user.filter((t) => t.id !== userToDelete))
-      router.delete(`/users/${userToDelete}`, {
+    if (idToDelete) {
+      setCliente(cliente.filter((t) => t.id !== idToDelete))
+      router.delete(`/clientes/${idToDelete}`, {
         preserveScroll: true,
       });
-      setUserToDelete(null)
+      setIdToDelete(null)
       setDeleteDialogOpen(false)
     }
   }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-balance">Gestión de Usuarios</h1>
-            <p className="text-muted-foreground">Administra los usuarios del sistema de acueducto</p>
+            <h1 className="text-3xl font-bold text-balance">Gestión de Clientes</h1>
+            <p className="text-muted-foreground">Administra los clientes</p>
           </div>
-          {can('users.create') && (
+          <div className="flex space-x-2">
+            {can('clientes.import') && (
               <Button
-                        type="button"
-                        className="bg-black text-white hover:bg-gray-900 cursor-pointer transition"
-                        onClick={() => (window.location.href = '/users/create')}
-                      >
-                        <PlusIcon className="w-4 h-4 mr-2" />
-                        Nuevo Usuario
-                      </Button>
-          )}
+                type="button"
+                className="bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300 cursor-pointer"
+                onClick={() => (window.location.href = '/clientes/import')}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-4 h-4 mr-2"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v16h16V4H4zm4 8h8m-4 4v-8" />
+                </svg>
+                Importar
+              </Button>
+            )}
+            {can('clientes.export') && (
+              <Button
+                type="button"
+                className="bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300 cursor-pointer"
+                onClick={() => (window.location.href = '/clientes/export')}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-4 h-4 mr-2"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v14m7-7H5" />
+                </svg>
+                Exportar
+              </Button>
+            )}
+            {can('clientes.create') && (
+              <Button
+                type="button"
+                className="bg-black text-white hover:bg-gray-900 cursor-pointer transition"
+                onClick={() => (window.location.href = '/clientes/create')}
+              >
+                <PlusIcon className="w-4 h-4 mr-2" />
+                Nuevo Cliente
+              </Button>
+            )}
+          </div>
         </div>
-
         <Card>
           <CardHeader>
-            <CardTitle>Lista de Usuarios</CardTitle>
+            <CardTitle>Lista de Clientes</CardTitle>
             <div className="flex items-center gap-4">
               <div className="relative flex-1 max-w-sm">
                 <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                type='text'
+                  type='text'
                   name='search'
                   placeholder="Buscar usuarios..."
                   onChange={handleSearchChange}
@@ -106,37 +136,46 @@ const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Usuario</TableHead>
-                    <TableHead>Rol</TableHead>
+                    <TableHead>Correo</TableHead>
+                    <TableHead>Celular</TableHead>
+                    <TableHead>Dirección</TableHead>
                     <TableHead className="w-[70px]">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-
-
-                  {users.data.length > 0 ? (
-                  users.data.map((user) => (
-                      <TableRow key={user.id}>
+                  {clientes.data.length > 0 ? (
+                    clientes.data.map((dato) => (
+                      <TableRow key={dato.id}>
                         <TableCell>
                           <div>
-                            <div className="font-medium">{user.name}</div>
-                            <div className="text-sm text-muted-foreground">{user.email}</div>
+                            <div className="font-medium">{dato.nombre}</div>
+
                           </div>
                         </TableCell>
-                        {/* <TableCell className="text-sm">{user.email}</TableCell> */}
                         <TableCell>
-                          {user.roles && user.roles.length > 0 ? (
-                            <div className="flex flex-wrap gap-1">
-                              {user.roles.map((role) => (
-
-                                <code key={role.id} className="bg-muted px-2 py-1 rounded text-sm"> {role.name}</code>
-
-                              ))}
-                            </div>
-                          ) : (
-                            <span className="text-gray-400">No roles</span>
-                          )}
-
+                          <div className="text-sm text-muted-foreground">{dato.email}</div>
                         </TableCell>
+                        <TableCell>
+                          <div className="text-sm text-muted-foreground">{dato.telefono}</div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm text-muted-foreground">{dato.direccion}</div>
+                        </TableCell>
+                        {/* <TableCell className="text-sm">{user.email}</TableCell> */}
+                        {/* <TableCell>
+                        {cliente.predios && cliente.predios.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {cliente.predios.map((predio) => (
+
+                              <code key={predio.id} className="bg-muted px-2 py-1 rounded text-sm"> {predio.direccion_predio} - {predio.direccion_ruta} - {predio.estado} </code>
+
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">Sin predios asociados</span>
+                        )}
+
+                      </TableCell> */}
 
                         <TableCell>
                           <DropdownMenu>
@@ -146,10 +185,10 @@ const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              {can('users.show') && (
+                              {can('clientes.show') && (
                                 <DropdownMenuItem asChild>
                                   <Link
-                                    href={`/users/${user.id}`}
+                                    href={`/clientes/${dato.id}`}
                                     className="flex items-center"
                                   >
                                     <EyeIcon className="h-4 w-4 mr-2" />
@@ -158,10 +197,10 @@ const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                                 </DropdownMenuItem>
                               )}
 
-                              {can('users.edit') && (
+                              {can('clientes.edit') && (
                                 <DropdownMenuItem asChild>
                                   <Link
-                                    href={`/users/${user.id}/edit`}
+                                    href={`/clientes/${dato.id}/edit`}
                                     className="flex items-center"
                                   >
                                     <EditIcon className="h-4 w-4 mr-2" />
@@ -170,11 +209,11 @@ const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                                 </DropdownMenuItem>
                               )}
 
-                              {can('users.delete') && (
+                              {can('clientes.delete') && (
                                 <DropdownMenuItem asChild>
                                   <button
                                     onClick={() => {
-                                      setUserToDelete(user.id)
+                                      setIdToDelete(dato.id)
                                       setDeleteDialogOpen(true)
                                     }}
                                     className="group flex w-full items-center text-red-600 transition-colors duration-200 hover:text-red-700 focus:outline-none"
@@ -193,14 +232,14 @@ const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                   ) : (
                     <TableRow>
                       <TableCell colSpan={4} className="text-center py-4">
-                        No users found.
+                        Clientes no encontrados.
                       </TableCell>
                     </TableRow>
                   )}
                 </TableBody>
               </Table>
               <div className="flex flex-wrap items-center justify-center gap-1">
-                {users.links.map((link, index) => (
+                {clientes.links.map((link, index) => (
                   <Link
                     key={index}
                     href={link.url ?? '#'}
@@ -223,7 +262,7 @@ const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
           <AlertDialogHeader>
             <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción no se puede deshacer. EL usuario será eliminado permanentemente del sistema.
+              Esta acción no se puede deshacer. El cliente será eliminado permanentemente del sistema.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -232,7 +271,8 @@ const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </DashboardLayout>
-  );
-}
 
+    </DashboardLayout >
+  );
+
+}

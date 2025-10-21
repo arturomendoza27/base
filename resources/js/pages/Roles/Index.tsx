@@ -3,6 +3,10 @@ import Pagination from '@/components/pagination';
 import { can } from '@/lib/can';
 import { type BreadcrumbItem, type PaginatedData, type Role } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
+import { PlusIcon, SearchIcon } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { DashboardLayout } from '../dashboard/dashboard-layout';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -25,17 +29,37 @@ export default function Index({ roles }: IndexProps) {
     }
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Roles" />
-            <div className="gap-4 rounded-xl p-4">
-                {can('roles.create') && (
-                    <Link
-                        href="roles/create"
-                        className="my-0.5 mr-2 rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700"
-                    >
-                        Create
-                    </Link>
+      <DashboardLayout>
+         <Head title="Roles" />
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold text-balance">Gestión de Roles y Permisos</h1>
+                  <p className="text-muted-foreground">Administra roles y permisos asignados a los usuarios</p>
+                </div>
+                {can('users.create') && (
+                  <Link
+                    href="/roles/create"
+                    className="inline-block mb-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded px-4 py-2 transition"
+                  >
+                    <PlusIcon className="w-4 h-4 mr-2 inline" />
+                    Nuevo Rol
+                  </Link>
                 )}
+              </div>
+      
+              <Card>
+                <CardHeader className="flex items-center justify-between">
+                  <CardTitle>Lista de Roles</CardTitle>
+                 
+              
+                </CardHeader>
+      
+                <CardContent>
+                    
+           
+            <div className="gap-4 rounded-xl p-4">
+                
                 <div className="">
                     <div className="flex flex-1 flex-col justify-center overflow-x-auto">
                         <table className="min-w-full flex-1 divide-y divide-gray-200 bg-white">
@@ -114,7 +138,11 @@ export default function Index({ roles }: IndexProps) {
                     <Pagination links={roles.links} />
                 </div>
             </div>
-        </AppLayout>
+            
+        </CardContent>
+                    </Card>
+                 </div>   
+      </DashboardLayout>
     );
 }
 

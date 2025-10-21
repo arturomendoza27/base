@@ -31,6 +31,43 @@ export interface User {
     updated_at: string;
 }
 
+export interface Cliente {
+  id: number;
+  nombre: string;
+  documento?: number | null;
+  telefono?: string | null;
+  email?: string | null;
+  direccion?: string | null;
+  estado: 'activo' | 'inactivo';
+  created_at: string ;
+  updated_at: string ;
+}
+
+export interface Tarifa {
+id: number;
+  nombre: string;
+  valor: number;
+  estado: 'activa' | 'inactiva';
+  created_at: string ;
+  updated_at: string ;
+} 
+
+export interface Predio {
+  id: number;
+  cliente_id: number;
+  matricula_predial: string;
+  direccion_predio: string;
+  ruta: string;
+  estado_servicio: "activo" | "suspendido" | "retirado";
+  fecha_conexion: string 
+  fecha_suspension: string ;
+  fecha_reconexion: string ;
+  created_at: string;
+  updated_at: string;
+  cliente: Cliente;
+}
+
+
 export interface Auth {
     user: User | null;
     permissions: string[];
@@ -59,6 +96,10 @@ export interface SharedData {
     auth: Auth;
     sidebarOpen: boolean;
     [key: string]: unknown;
+}
+
+export interface Filters {
+    search?: string;
 }
 
 export interface PaginationLink {

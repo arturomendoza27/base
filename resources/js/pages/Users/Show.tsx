@@ -25,7 +25,7 @@ interface ShowProps {
 export default function Show({ user, userRoles, userPermissions }: ShowProps) {
     return (
         <DashboardLayout>
-             <Head title={`User: ${user.name}`} />
+             <Head title={`Usuario: ${user.name}`} />
              <div className="space-y-6">
                <div className="flex items-center gap-4">
                     <Link href="/users">

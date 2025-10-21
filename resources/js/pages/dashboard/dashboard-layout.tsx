@@ -17,6 +17,8 @@ import {
   CreditCardIcon,
   WalletIcon,
   Building2Icon,
+ContactRoundIcon,
+BookLockIcon,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { can } from '@/lib/can';
@@ -25,14 +27,15 @@ import flasher from '@flasher/flasher'
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: HomeIcon },
   { name: "Usuarios", href: "/users", icon: UsersIcon, permission: "users.view" },
-  { name: "Roles", href: "/roles", icon: UsersIcon, permission: "roles.view" },
-  { name: "Predios", href: "/predios", icon: Building2Icon },
-  { name: "Tarifas", href: "/tarifas", icon: DollarSignIcon },
-  { name: "Facturación", href: "/facturacion", icon: FileTextIcon },
-  { name: "Caja", href: "/caja", icon: WalletIcon },
-  { name: "Pagos", href: "/pagos", icon: CreditCardIcon },
-  { name: "Reportes", href: "/reportes", icon: BarChart3Icon },
-  { name: "Configuración", href: "/settings", icon: SettingsIcon },
+  { name: "Roles", href: "/roles", icon: BookLockIcon, permission: "roles.view" },
+  { name: "Tarifas", href: "/tarifas", icon: DollarSignIcon, permission: "tarifas.view"  },
+  { name: "Clientes", href: "/clientes", icon: ContactRoundIcon, permission: "clientes.view" },
+  { name: "Predios", href: "/predios", icon: Building2Icon, permission: "predios.view"  },
+  { name: "Facturación", href: "/facturacion", icon: FileTextIcon, permission: "facturacion.view"  },
+  { name: "Caja", href: "/caja", icon: WalletIcon, permission: "caja.view"  },
+  { name: "Pagos", href: "/pagos", icon: CreditCardIcon, permission: "pagos.view"  },
+  { name: "Reportes", href: "/reportes", icon: BarChart3Icon, permission: "reportes.view"  },
+  { name: "Configuración", href: "/settings", icon: SettingsIcon, permission: "settings.view"  },
 
 ]
 
