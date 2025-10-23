@@ -1,6 +1,6 @@
 import { Input } from '@/components/ui/input';
 import { router } from '@inertiajs/react'
-import { type BreadcrumbItem } from '@/types';
+import { CategoriaPredio, type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { DashboardLayout } from '../dashboard/dashboard-layout';
 import { Button } from "@/components/ui/button"
@@ -23,12 +23,19 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
+interface CreateProps {
+    datos: CategoriaPredio[];
+}
 
-export default function Create() {
+export default function Create({ datos }: CreateProps) {
     const { data, setData, post, processing, errors } = useForm({
         nombre: "",
         valor: "",
+        valor_conexion: "",
+        valor_reconexion: "",
         valor_letras: "",
+        categoria_id: "",        
+        vigente_desde: ""
     })
 
 
@@ -55,6 +62,26 @@ export default function Create() {
         })
     }
 
+    const handleChangeValorR = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const valor_reconexion = e.target.value
+        const numero = parseFloat(valor_reconexion || "0")
+
+        setData({
+            ...data,
+            valor_reconexion,
+            valor_letras: valor_reconexion ? numberToWords(numero) : "",
+        })
+    }
+ const handleChangeValorC = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const valor_conexion = e.target.value
+        const numero = parseFloat(valor_conexion || "0")
+
+        setData({
+            ...data,
+            valor_conexion,
+            valor_letras: valor_conexion ? numberToWords(numero) : "",
+        })
+    }
 
     return (
         <DashboardLayout>
@@ -84,6 +111,29 @@ export default function Create() {
                                 <CardContent className="space-y-4">
                                     <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                                         <div className="space-y-2">
+                                            <label htmlFor="estado" className="block text-gray-700 text-sm font-bold mb-2">
+                                                Categoria Predio
+                                            </label>
+                                            <Select
+                                                value={(data.categoria_id) || ''}
+                                                onValueChange={(value) => setData('categoria_id', value)}
+
+                                            >
+                                                <SelectTrigger className="w-full">
+                                                    <SelectValue placeholder="Seleccione la categoria" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {datos.map((cat) => (
+                                                        <SelectItem key={cat.id} value={cat.id.toString()}>
+                                                            {cat.nombre}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+
+                                        </div>
+
+                                        <div className="space-y-2">
                                             <Label htmlFor="nombre">
                                                 Nombre Tarifa <span className="text-destructive">*</span>
                                             </Label>
@@ -100,7 +150,7 @@ export default function Create() {
 
                                         <div className="space-y-2">
                                             <Label htmlFor="documento">
-                                                Valor <span className="text-destructive">*</span>
+                                                Valor mensual <span className="text-destructive">*</span>
                                             </Label>
                                             <Input
                                                 id="valor"
@@ -111,6 +161,48 @@ export default function Create() {
                                             />
                                             {errors.valor && <div className="text-red-600 text-sm mt-1">{errors.valor}</div>}
 
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="valor_conexion">
+                                                Valor conexión (punto) <span className="text-destructive">*</span>
+                                            </Label>
+                                            <Input
+                                                id="valor_conexion"
+                                                type="number"
+                                                placeholder="0"
+                                                value={data.valor_conexion}
+                                                onChange={handleChangeValorC}
+                                            />
+                                            {errors.valor_conexion && <div className="text-red-600 text-sm mt-1">{errors.valor_conexion}</div>}
+
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="valor_reconexion">
+                                                Valor Reconexión <span className="text-destructive">*</span>
+                                            </Label>
+                                            <Input
+                                                id="valor_reconexion"
+                                                type="number"
+                                                placeholder="0"
+                                                value={data.valor_reconexion}
+                                                onChange={handleChangeValorR}
+                                            />
+                                            {errors.valor_reconexion && <div className="text-red-600 text-sm mt-1">{errors.valor_reconexion}</div>}
+
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label htmlFor="estado" className="block text-gray-700 text-sm font-bold mb-2">
+                                               Viegente desde <span className="text-destructive">*</span>
+                                            </label>
+                                            <Input
+                                                type="date"
+                                                value={data.vigente_desde}
+                                                onChange={e => setData('vigente_desde', e.target.value)}
+                                            />
+                                            {errors.vigente_desde && <div className="text-red-600 text-sm mt-1">{errors.vigente_desde}</div>}
                                         </div>
 
 

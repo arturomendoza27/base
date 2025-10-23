@@ -101,6 +101,13 @@ export default function Show({ datos }: ShowProps) {
                                 <p className="text-gray-900">{datos.ruta}</p>
                             </div>
 
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Categoria
+                                </label>
+                                <p className="text-gray-900">{datos.categoria.nombre}</p>
+                            </div>
+
 
                             
                             <div>

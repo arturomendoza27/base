@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('factura_id')->constrained('facturacion')->onDelete('cascade');
             $table->date('fecha_pago');
             $table->decimal('valor_pagado', 12, 2);
+            $table->decimal('saldo_restante', 12, 2);
             $table->string('medio_pago')->nullable(); // efectivo, transferencia, etc.
             $table->string('recibo_numero')->nullable();
             $table->timestamps();

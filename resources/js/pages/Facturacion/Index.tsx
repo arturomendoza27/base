@@ -1,9 +1,9 @@
-import { BreadcrumbItem, Cliente, Filters, PaginatedData, Tarifa } from '@/types';
+import { BreadcrumbItem, Factura, Filters, PaginatedData, Predio } from '@/types';
 import React, { useState } from 'react';
 import { DashboardLayout } from '../dashboard/dashboard-layout';
 import { can } from '@/lib/can';
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { EditIcon, EyeIcon, MoreHorizontalIcon, PlusIcon, SearchIcon, TrashIcon } from 'lucide-react';
+import { EditIcon, EyeIcon, MoreHorizontalIcon, PlusIcon, SearchIcon, TrashIcon, XIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -14,87 +14,125 @@ import { formatoPesos } from '@/lib/fomato_numeros';
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
-    title: 'Tarifas',
-    href: '/tarifas',
+    title: 'Predios',
+    href: '/predios',
   },
 ];
 
 
 
 interface IndexProps {
-  datos: PaginatedData<Tarifa>;
+  datos: PaginatedData<Factura>;
   filters: Filters;
 }
 
-
-
 export default function Index({ datos, filters }: IndexProps) {
-  const [tarifa, setTarifa] = useState(datos.data);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [idToDelete, setIdToDelete] = useState<number | null>(null)
-  // Filter users based on search term
-  const { data, setData } = useForm({
-    search: filters.search || '',
-  });
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const userInput = e.target.value.toLowerCase()
-    setData('search', userInput)
-    const queryString = userInput ? { search: userInput } : {}
 
-    router.get('/tarifas', queryString, {
-      preserveState: true,
-      preserveScroll: true,
+    const [tarifa, setTarifa] = useState(datos.data);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [idToDelete, setIdToDelete] = useState<number | null>(null)
+    // Filter users based on search term
+    const { data, setData } = useForm({
+      search: filters.search || '',
     });
-  }
-  {/* Handle Delete */ }
-  const handleDeleteConfirm = () => {
-    if (idToDelete) {
-      setTarifa(tarifa.filter((t) => t.id !== idToDelete))
-      router.delete(`/tarifas/${idToDelete}`, {
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const userInput = e.target.value.toLowerCase()
+      setData('search', userInput)
+      const queryString = userInput ? { search: userInput } : {}
+  
+      router.get('/predios', queryString, {
+        preserveState: true,
         preserveScroll: true,
       });
-      setIdToDelete(null)
-      setDeleteDialogOpen(false)
     }
-  }
+    {/* Handle Delete */ }
+    const handleDeleteConfirm = () => {
+      if (idToDelete) {
+        setTarifa(tarifa.filter((t) => t.id !== idToDelete))
+        router.delete(`/predios/${idToDelete}`, {
+          preserveScroll: true,
+        });
+        setIdToDelete(null)
+        setDeleteDialogOpen(false)
+      }
+    }
+  
+    const handleClear = () => {
+      setData({
+        search: '',
+      })
+  
+      const queryString = {}
+  
+       router.get('/predios', queryString, {
+        preserveState: true,
+        preserveScroll: true,
+      });
+    }
+
 
   return (
     <DashboardLayout>
-      
       <div className="space-y-6">
-        
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-balance">Gestión de las Tarifas</h1>
-            <p className="text-muted-foreground">Administra las tarifas</p>
+            <h1 className="text-3xl font-bold text-balance">Gestión de la Facturación</h1>
+            <p className="text-muted-foreground">Administra la facturación agua de red</p>
           </div>
           <div className="flex space-x-2">
-            {can('tarifas.create') && (
+            {can('facturacion.export') && (
+              <Button
+                type="button"
+                className="bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300 cursor-pointer"
+                onClick={() => (window.location.href = '/facturacion/facturar')}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-4 h-4 mr-2"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v14m7-7H5" />
+                </svg>
+                Exportar
+              </Button>
+            )}
+            {can('facturacion.create') && (
               <Button
                 type="button"
                 className="bg-black text-white hover:bg-gray-900 cursor-pointer transition"
-                onClick={() => (window.location.href = '/tarifas/create')}
+                onClick={() => (window.location.href = '/facturacion/create')}
               >
                 <PlusIcon className="w-4 h-4 mr-2" />
-                Nueva Tarifa
+                Facturar
               </Button>
             )}
           </div>
         </div>
         <Card>
           <CardHeader>
-            <CardTitle>Lista de Tarifas</CardTitle>
+            
+            <CardTitle>Lista facturas emitidas mes </CardTitle> {/*obtener dato de ciclo de facturacion {datos.ciclo.mes}*/} 
             <div className="flex items-center gap-4">
               <div className="relative flex-1 max-w-sm">
                 <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
+                  id="search"
                   type='text'
                   name='search'
-                  placeholder="Buscar tarifas..."
+                  placeholder="Buscar facturas..."
                   onChange={handleSearchChange}
                   value={data.search}
                   className="pl-10"
                 />
+                <button
+                  type="button"
+                  // onClick={handleClear}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <XIcon className="h-4 w-4" />
+                </button>
               </div>
             </div>
           </CardHeader>
@@ -104,9 +142,10 @@ export default function Index({ datos, filters }: IndexProps) {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Nombre</TableHead>
-                    <TableHead>Categoria</TableHead>
-                    <TableHead>Valor</TableHead>
+                    <TableHead>No. Factura</TableHead>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Direccion</TableHead>
+                    <TableHead>Total</TableHead>
                     <TableHead>Estado</TableHead>
                     <TableHead className="w-[70px]">Acciones</TableHead>
                   </TableRow>
@@ -117,25 +156,44 @@ export default function Index({ datos, filters }: IndexProps) {
                       <TableRow key={dato.id}>
                         <TableCell>
                           <div>
-                            <div className="font-medium">{dato.nombre}</div>
+                            <div className="font-medium">{dato.id}</div>
                           </div>
                         </TableCell>
-                            <TableCell>
+                        <TableCell>
                           <div>
-                            <div className="text-sm text-muted-foreground">{dato.categoria.nombre}</div>
+                            <div className="font-medium">{dato.cliente.nombre}</div>
+                            <div className="text-sm text-muted-foreground">Código Cliente: {dato.cliente.id}</div>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="text-sm text-muted-foreground">{formatoPesos(dato.valor)}</div>
+                          <div>
+                            <div className="font-medium">{dato.predio.direccion_predio}</div>
+                            <div className="text-sm text-muted-foreground"> Id: {dato.predio.id}</div>
+                          </div>
                         </TableCell>
                         <TableCell>
-                          {dato.estado === "activa" ? (
+                          <div>
+                            <div className="font-medium">{formatoPesos(dato.total_factura)}</div>
+                       
+                          </div>
+                        </TableCell>
+                      {/*'pendiente', 'pagada', 'vencida', 'anulada'*/}
+                        <TableCell>
+                          {dato.estado === "pendiente" ? (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                              Activa
+                              Pendiente
+                            </span>
+                          ) : dato.estado === "pagada" ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                              Pagada
+                            </span>
+                          ) : dato.estado === "vencida" ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                              Vencida
                             </span>
                           ) : (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                              Incativa
+                              Anulada
                             </span>
                           )}
                         </TableCell>
@@ -147,10 +205,10 @@ export default function Index({ datos, filters }: IndexProps) {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              {can('tarifas.show') && (
+                              {can('faturacion.show') && (
                                 <DropdownMenuItem asChild>
                                   <Link
-                                    href={`/tarifas/${dato.id}`}
+                                    href={`/facturacion/${dato.id}`}
                                     className="flex items-center"
                                   >
                                     <EyeIcon className="h-4 w-4 mr-2" />
@@ -159,10 +217,10 @@ export default function Index({ datos, filters }: IndexProps) {
                                 </DropdownMenuItem>
                               )}
 
-                              {can('tarifas.edit') && (
+                              {can('facturacion.edit') && (
                                 <DropdownMenuItem asChild>
                                   <Link
-                                    href={`/tarifas/${dato.id}/edit`}
+                                    href={`/facturacion/${dato.id}/edit`}
                                     className="flex items-center"
                                   >
                                     <EditIcon className="h-4 w-4 mr-2" />
@@ -171,7 +229,7 @@ export default function Index({ datos, filters }: IndexProps) {
                                 </DropdownMenuItem>
                               )}
 
-                              {can('tarifas.delete') && (
+                              {can('facturacion.delete') && (
                                 <DropdownMenuItem asChild>
                                   <button
                                     onClick={() => {

@@ -17,8 +17,8 @@ import { Filters } from '../../types/index';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Predios',
-        href: '/predios',
+        title: 'Facturaciónn',
+        href: '/facturacion',
     },
     {
         title: 'Create',

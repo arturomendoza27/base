@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Categorias_predios;
 use App\Models\Tarifas;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -15,7 +16,7 @@ class TarifasController extends Controller
      */
     public function index(Request $request)
     {
-        $data = Tarifas::when($request->search, function ($query) use ($request) {
+        $data = Tarifas::with('categoria')->when($request->search, function ($query) use ($request) {
             $query->where('nombre', 'like', "%{$request->search}%")
                 ->orWhere('estado', 'like', "%{$request->search}%");
         })
@@ -37,10 +38,9 @@ class TarifasController extends Controller
      */
     public function create()
     {
-        $data = Tarifas::select('id', 'nombre')
-            ->orderBy('nombre')
-            ->get()
-            ->pluck('nombre');
+        $data = Categorias_predios::select('id', 'nombre')
+            ->orderBy('id')
+            ->get();
 
         return Inertia::render('Tarifas/Create', [
             'datos' => $data,
@@ -53,19 +53,30 @@ class TarifasController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nombre' => 'required|string|max:255|unique:tarifas,nombre',
-            'valor' => 'required|numeric|between:-9999999999.99,9999999999.99|regex:/^-?\d{1,10}(\.\d{1,2})?$/|:tarifas,valor',
+           'categoria_id'   => 'required|exists:categorias_predios,id',
+            'nombre'         => 'required|string|max:100',
+            'valor'          => 'required|numeric|between:-9999999999.99,9999999999.99|regex:/^-?\d{1,10}(\.\d{1,2})?$/|:tarifas,valor',
+            'valor_conexion'          => 'required|numeric|between:-9999999999.99,9999999999.99|regex:/^-?\d{1,10}(\.\d{1,2})?$/|:tarifas,valor_conexion',
+            'valor_reconexion'          => 'required|numeric|between:-9999999999.99,9999999999.99|regex:/^-?\d{1,10}(\.\d{1,2})?$/|:tarifas,valor_reconexion',
+            'vigente_desde'  => 'required|date',
         ]);
 
         try {
-            DB::beginTransaction();
+            // DB::beginTransaction();
 
-            $datos = Tarifas::create([
-                'nombre' => ucfirst(strtolower($validated['nombre'])),
-                'valor' => $validated['valor'],
-            ]);
+            // $datos = Tarifas::create([
+            //     'categoria_id' =>$validated['categoria_id'],
+            //     'nombre' => ucfirst(strtolower($validated['nombre'])),
+            //     'valor' => $validated['valor'],
+            //     'valor_conexion' => $validated['valor_conexion'],
+            //     'valor_reconexion' => $validated['valor_reconexion'],
+            //     'vigente_desde' => $validated['vigente_desde'],
+            // ]);
 
-            DB::commit();
+            // DB::commit();
+
+
+          Tarifas::crearNuevaTarifa($validated);
 
             return redirect()
                 ->route('tarifas.index')
@@ -111,9 +122,11 @@ class TarifasController extends Controller
         $data = Tarifas::findOrFail($id);
 
         $validated = $request->validate([
-            'nombre' => 'required|string|max:255|unique:tarifas,nombre,' . $data->id,
+            'nombre' => 'required|string|max:255,' . $data->id,
            'valor' => 'required|numeric|between:-9999999999.99,9999999999.99|regex:/^-?\d{1,10}(\.\d{1,2})?$/|:tarifas,valor',
-            'estado' => 'required|in:activa,inactiva',
+            'valor_conexion' => 'required|numeric|between:-9999999999.99,9999999999.99|regex:/^-?\d{1,10}(\.\d{1,2})?$/|:tarifas,valor_conexion',
+            'valor_reconexion' => 'required|numeric|between:-9999999999.99,9999999999.99|regex:/^-?\d{1,10}(\.\d{1,2})?$/|:tarifas,valor_reconexion',
+            // 'estado' => 'required|in:activa,inactiva',
 
 
         ]);
@@ -124,7 +137,9 @@ class TarifasController extends Controller
             $data->update([
                 'nombre' => ucfirst(strtolower($validated['nombre'])),
                 'valor' => $validated['valor'],
-                'estado' => $validated['estado'] ?? $data->estado,
+                'valor_conexion' => $validated['valor_conexion'],
+                'valor_reconexion' => $validated['valor_reconexion'],
+                // 'estado' => $validated['estado'] ?? $data->estado,
             ]);
 
             DB::commit();
@@ -147,7 +162,7 @@ class TarifasController extends Controller
      */
     public function destroy(string $id)
     {
-        $data = Tarifas::findOrFail($id);
+        $data = Tarifas::inactiva()->findOrFail($id);
 
         try {
             DB::beginTransaction();

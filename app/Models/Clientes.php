@@ -37,4 +37,10 @@ class Clientes extends Model
     {
         return $this->hasMany(Facturacion::class, 'usuario_id');
     }
+    
+      // Scope para obtener la tarifa vigente
+    public function scopeActivos($query)
+    {
+        return $query->where('estado', 'activo');
+    }
 }

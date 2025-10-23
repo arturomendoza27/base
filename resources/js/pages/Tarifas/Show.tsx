@@ -61,6 +61,18 @@ export default function Show({ datos }: ShowProps) {
                                 </label>
                                 <p className="text-gray-900">{formatoPesos(datos.valor)}</p>
                             </div>
+                             <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Valor Conexión (punto)
+                                </label>
+                                <p className="text-gray-900">{formatoPesos(datos.valor_conexion)}</p>
+                            </div>
+                             <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Valor Reconexión
+                                </label>
+                                <p className="text-gray-900">{formatoPesos(datos.valor_reconexion)}</p>
+                            </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Estado
@@ -103,10 +115,6 @@ export default function Show({ datos }: ShowProps) {
                                 </p>
                             </div>
                         </div>
-
-
-
-
                     </div>
                 </div>
             </div>

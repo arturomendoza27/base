@@ -2,6 +2,8 @@
 
 namespace App\Imports;
 
+use App\Models\Barrios;
+use App\Models\Categorias_predios;
 use App\Models\Predios;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithBatchInserts;
@@ -15,8 +17,17 @@ class PrediosImport implements ToModel, WithHeadingRow, WithBatchInserts, WithCh
     *
     * @return \Illuminate\Database\Eloquent\Model|null
     */
+    private $barrio;
+    private $categoria;
+    public function __construct()
+    {
+        $this->barrio = Barrios::pluck('id', 'nombre')->toArray();
+        $this->categoria = Categorias_predios::pluck('id', 'nombre')->toArray();
+    }
+
     public function model(array $row) 
     {
+   
      $existe = Predios::with('cliente')->where('cliente_id', $row['codigo_cliente'])
                ->orWhere('direccion_predio', $row['direccion'])
                ->orWhere('ruta', $row['ruta'])
@@ -30,7 +41,9 @@ class PrediosImport implements ToModel, WithHeadingRow, WithBatchInserts, WithCh
             'cliente_id'     => strtoupper($row['codigo_cliente']),
             'matricula_predial'    => $row['matricula'],
             'direccion_predio'    =>  $row['direccion'],
-            'ruta'    => $row['ruta']
+            'barrio_id' => $this->barrio[$row['barrio']] ?? null,
+            'ruta'    => $row['ruta'],
+            'categoria_id'    => $row['categoria']
         ]);
     }
      public function batchSize(): int

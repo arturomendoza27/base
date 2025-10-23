@@ -10,14 +10,15 @@ class Pagos extends Model
 
     protected $fillable = [
         'factura_id',
-        'cliente_id',
-        'predio_id',
+        'cliente_id',//pendiente implementar
+        'predio_id',//pendiente implementar
         'fecha_pago',
-        'monto_pagado',
-        'metodo_pago',
-        'referencia',
-        'observaciones',
-        'registrado_por',
+        'valor_pagado',
+        'saldo_restante',
+        'medio_pago',
+        'recibo_numero',
+        'observaciones',//pendiente implementar
+        'registrado_por',//pendiente implementar
     ];
 
     /**
@@ -26,7 +27,7 @@ class Pagos extends Model
 
     public function factura()
     {
-        return $this->belongsTo(Facturas::class, 'factura_id');
+        return $this->belongsTo(Facturacion::class, 'factura_id');
     }
 
     public function usuario()

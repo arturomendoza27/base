@@ -16,11 +16,13 @@ return new class extends Migration
             $table->foreignId('cliente_id')->constrained('clientes')->onDelete('cascade');
             $table->string('matricula_predial')->unique();
             $table->string('direccion_predio');
+            $table->foreignId('barrio_id')->constrained('barrios')->onDelete('cascade');
             $table->string('ruta')->nullable()->unique();
-            $table->enum('estado_servicio', ['activo', 'suspendido', 'retirado'])->default('activo');
+            $table->enum('estado_servicio', ['activo', 'suspendido', 'desconectado'])->default('activo'); 
             $table->date('fecha_conexion')->nullable();
             $table->date('fecha_suspension')->nullable();
             $table->date('fecha_reconexion')->nullable();
+            $table->foreignId('categoria_id')->nullable()->constrained('categorias_predios');
             $table->timestamps();
         });
     }

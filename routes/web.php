@@ -57,3 +57,4 @@ require __DIR__ . '/auth.php';
 require __DIR__ . '/clientes.php';
 require __DIR__ . '/tarifas.php';
 require __DIR__ . '/predios.php';
+require __DIR__ . '/facturacion.php';

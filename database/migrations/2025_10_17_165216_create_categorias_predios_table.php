@@ -11,17 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tarifas', function (Blueprint $table) {
+        Schema::create('categorias_predios', function (Blueprint $table) {
             $table->id();
+            $table->string('nombre'); // Ej: "Residencial", "Comercial", "Institucional"
+            $table->string('descripcion')->nullable();
             $table->timestamps();
-        });
-    }
+            });
+    } 
 
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::dropIfExists('tarifas');
+        Schema::dropIfExists('categorias_predios');
     }
 };

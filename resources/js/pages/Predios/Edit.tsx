@@ -1,7 +1,7 @@
 import { Input } from '@/components/ui/input';
 import { router } from '@inertiajs/react'
 import { DashboardLayout } from '../dashboard/dashboard-layout';
-import { Cliente, Filters, Predio, Tarifa, type BreadcrumbItem } from '@/types';
+import { Barrio, CategoriaPredio, Cliente, Filters, Predio, Tarifa, type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { ArrowLeftIcon, SaveIcon, SearchIcon, XIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -25,17 +25,21 @@ const breadcrumbs: BreadcrumbItem[] = [
 interface EditProps {
     datos: Predio;
     clientes: Cliente[];
+    barrios: Barrio[];
+    categoria: CategoriaPredio[];
     filters: Filters[];
 }
 
-export default function Edit({ datos, clientes }: EditProps) {
+export default function Edit({ datos, clientes, barrios, categoria }: EditProps) {
 
     const { data, setData, put, processing, errors } = useForm({
         cliente_id: datos.cliente_id || '',
         direccion: datos.direccion_predio || '',
+        barrio_id: datos.barrio_id || '',
         matricula: datos.matricula_predial || '',
         ruta: datos.ruta || '',
         estado: datos.estado_servicio || '',
+        categoria_id: datos.categoria_id || '',
     })
 
     // Estado solo para mostrar texto, no se envía al backend
@@ -96,7 +100,7 @@ export default function Edit({ datos, clientes }: EditProps) {
                 <div className="p-6 max-w-lg mx-auto">
                     <form
                         onSubmit={submit}>
-                        <div className="space-y-6">
+                        <div className="space-y-4">
 
                             <Card>
                                 <CardHeader>
@@ -104,7 +108,7 @@ export default function Edit({ datos, clientes }: EditProps) {
                                     <CardDescription>Datos básicos del predio</CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
-                                    <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                             <label htmlFor="cliente_id" className="block text-gray-700 text-sm font-bold mb-2">
                                                 Cliente
@@ -184,6 +188,29 @@ export default function Edit({ datos, clientes }: EditProps) {
                                             />
                                             {errors.direccion && <div className="text-red-600 text-sm mt-1">{errors.direccion}</div>}
                                         </div>
+                                          <div className="space-y-2">
+                                            <label htmlFor="barrio_id" className="block text-gray-700 text-sm font-bold mb-2">
+                                                Barrio
+                                            </label>
+                                            <Select
+                                                value={data.barrio_id?.toString() || ""}
+
+                                                onValueChange={(value) => setData("barrio_id", value)}
+
+                                            >
+                                                <SelectTrigger className="w-full">
+                                                    <SelectValue placeholder="Seleccione un barrio" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {barrios.map((barrio) => (
+                                                        <SelectItem key={barrio.id} value={barrio.id.toString()}>
+                                                            {barrio.nombre}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+
+                                        </div>
                                         <div className="space-y-2">
                                             <label htmlFor="valorruta" className="block text-gray-700 text-sm font-bold mb-2">
                                                 Ruta
@@ -198,9 +225,30 @@ export default function Edit({ datos, clientes }: EditProps) {
                                             />
                                             {errors.ruta && <div className="text-red-600 text-sm mt-1">{errors.ruta}</div>}
                                         </div>
+                                        
+                                         <div className="space-y-2">
+                                            <label htmlFor="categoria" className="block text-gray-700 text-sm font-bold mb-2">
+                                                Categoria Predio
+                                            </label>
+                                            <Select
+                                                value={(data.categoria_id.toString()) }
+                                                onValueChange={(value) => setData('categoria_id', value)}
 
+                                            >
+                                                <SelectTrigger className="w-full">
+                                                    <SelectValue placeholder="Seleccione la categoria" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {categoria.map((cat) => (
+                                                        <SelectItem key={cat.id} value={cat.id.toString()}>
+                                                            {cat.nombre}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
 
-                                        <div>
+                                        </div>
+                                        <div className="space-y-2">
                                             <label htmlFor="estado" className="block text-gray-700 text-sm font-bold mb-2">
                                                 Estado
                                             </label>

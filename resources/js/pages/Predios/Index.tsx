@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { DashboardLayout } from '../dashboard/dashboard-layout';
 import { can } from '@/lib/can';
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { EditIcon, EyeIcon, MoreHorizontalIcon, PlusIcon, SearchIcon, TrashIcon } from 'lucide-react';
+import { EditIcon, EyeIcon, MoreHorizontalIcon, PlusIcon, SearchIcon, TrashIcon, XIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -59,6 +59,19 @@ export default function Index({ datos, filters }: IndexProps) {
     }
   }
 
+  const handleClear = () => {
+    setData({
+      search: '',
+    })
+
+    const queryString = {}
+
+     router.get('/predios', queryString, {
+      preserveState: true,
+      preserveScroll: true,
+    });
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -104,7 +117,7 @@ export default function Index({ datos, filters }: IndexProps) {
                 Exportar
               </Button>
             )}
-            {can('tarifas.create') && (
+            {can('predios.create') && (
               <Button
                 type="button"
                 className="bg-black text-white hover:bg-gray-900 cursor-pointer transition"
@@ -123,6 +136,7 @@ export default function Index({ datos, filters }: IndexProps) {
               <div className="relative flex-1 max-w-sm">
                 <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
+                  id="search"
                   type='text'
                   name='search'
                   placeholder="Buscar predios..."
@@ -130,6 +144,13 @@ export default function Index({ datos, filters }: IndexProps) {
                   value={data.search}
                   className="pl-10"
                 />
+                <button
+                  type="button"
+                  onClick={handleClear}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <XIcon className="h-4 w-4" />
+                </button>
               </div>
             </div>
           </CardHeader>
@@ -139,7 +160,9 @@ export default function Index({ datos, filters }: IndexProps) {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Nombre</TableHead>
+                    <TableHead>Cod Predio</TableHead>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Matricula</TableHead>
                     <TableHead>Direccion</TableHead>
                     <TableHead>Ruta</TableHead>
                     <TableHead>Estado</TableHead>
@@ -152,14 +175,25 @@ export default function Index({ datos, filters }: IndexProps) {
                       <TableRow key={dato.id}>
                         <TableCell>
                           <div>
+                            <div className="font-medium">{dato.id}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
                             <div className="font-medium">{dato.cliente.nombre}</div>
-                            <div className="text-sm text-muted-foreground">{dato.cliente.documento}</div>
+                            <div className="text-sm text-muted-foreground">Código Cliente: {dato.cliente.id}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{dato.matricula_predial}</div>
+                            <div className="text-sm text-muted-foreground"> Cat: {dato.categoria.nombre}</div>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div>
                             <div className="font-medium">{dato.direccion_predio}</div>
-
+                            <div className="text-sm text-muted-foreground">{dato.barrio.nombre}</div>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -176,7 +210,7 @@ export default function Index({ datos, filters }: IndexProps) {
                             </span>
                           ) : (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                              Incativo
+                              Retirado
                             </span>
                           )}
                         </TableCell>

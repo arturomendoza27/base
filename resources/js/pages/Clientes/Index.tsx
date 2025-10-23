@@ -135,6 +135,7 @@ export default function Index({ clientes, filters }: IndexProps) {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Cod Cliente</TableHead>
                     <TableHead>Usuario</TableHead>
                     <TableHead>Correo</TableHead>
                     <TableHead>Celular</TableHead>
@@ -146,6 +147,12 @@ export default function Index({ clientes, filters }: IndexProps) {
                   {clientes.data.length > 0 ? (
                     clientes.data.map((dato) => (
                       <TableRow key={dato.id}>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{dato.id}</div>
+
+                          </div>
+                        </TableCell>
                         <TableCell>
                           <div>
                             <div className="font-medium">{dato.nombre}</div>

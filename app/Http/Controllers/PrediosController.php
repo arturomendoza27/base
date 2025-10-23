@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Exports\PrediosExport;
 use App\Imports\PrediosImport;
+use App\Models\Barrios;
+use App\Models\Categorias_predios;
 use App\Models\Clientes;
 use App\Models\Predios;
 use Illuminate\Support\Facades\DB;
@@ -18,12 +20,13 @@ class PrediosController extends Controller
      */
     public function index(Request $request)
     {
-        $data = Predios::with('cliente')
-        ->when($request->search, function ($query) use ($request) {
-            $query->where('direccion_predio', 'like', "%{$request->search}%")
-                ->orWhere('ruta', 'like', "%{$request->search}%");
-        })    ->orWhereRelation('cliente', 'nombre',  'like', "%{$request->search}%")
-              ->orWhereRelation('cliente', 'documento',  'like', "%{$request->search}%")
+        $data = Predios::with('cliente', 'barrio', 'categoria')
+            ->when($request->search, function ($query) use ($request) {
+                $query->where('direccion_predio', 'like', "%{$request->search}%")
+                    ->orWhere('ruta', 'like', "%{$request->search}%");
+            })->orWhereRelation('cliente', 'nombre',  'like', "%{$request->search}%")
+            ->orWhereRelation('cliente', 'documento',  'like', "%{$request->search}%")
+            ->orWhereRelation('barrio', 'nombre',  'like', "%{$request->search}%")
 
             ->orderBy('created_at', 'desc')
             ->latest()
@@ -52,8 +55,18 @@ class PrediosController extends Controller
             ->orderBy('nombre')
             ->get(['id', 'nombre', 'documento']);
 
+
+        $barrios = Barrios::orderBy('id')
+            ->get(['id', 'nombre']);
+
+        $categoria = Categorias_predios::select('id', 'nombre')
+            ->orderBy('id')
+            ->get();
+
         return Inertia::render('Predios/Create', [
             'datos' => $data,
+            'barrios' => $barrios,
+            'categoria' => $categoria,
             'filters' => [
                 'search' => $request->search,
             ],
@@ -68,10 +81,12 @@ class PrediosController extends Controller
     {
 
         $validated = $request->validate([
-            'cliente_id' => 'required|string|max:255',
-            'matricula_predial' => 'required|string|max:255',
-            'direccion_predio' => 'required|string|max:255|unique:predios,direccion_predio',
-            'ruta' => 'required|string|max:255|unique:predios,ruta',
+            'cliente_id' => 'required|integer',
+            'barrio_id' => 'required|integer',
+            'matricula_predial' => 'required|string',
+            'direccion_predio' => 'required|string|unique:predios,direccion_predio',
+            'ruta' => 'required|string|unique:predios,ruta',
+            'categoria_id' => 'required',
         ]);
 
 
@@ -83,7 +98,9 @@ class PrediosController extends Controller
                 'cliente_id' => $validated['cliente_id'],
                 'matricula_predial' => $validated['matricula_predial'],
                 'direccion_predio' => $validated['direccion_predio'],
+                'barrio_id' => $validated['barrio_id'],
                 'ruta' => $validated['ruta'],
+                'categoria_id' => $validated['categoria_id'],
             ]);
 
             DB::commit();
@@ -100,33 +117,33 @@ class PrediosController extends Controller
                 ->with('error', 'Hafallado en la creación del Predio: ' . $e->getMessage());
         }
     }
-    
-    public function export() 
+
+    public function export()
     {
         return Excel::download(new PrediosExport, 'predios.xlsx');
     }
-    
+
     public function importar(Request $request)
     {
 
         $file = $request->file('archivo');
-   
+
         Excel::import(new PrediosImport, $file);
 
         return redirect()
-                ->route('predios.index')
-                ->with('success', 'Predios importados con Exito.');
+            ->route('predios.index')
+            ->with('success', 'Predios importados con Exito.');
     }
     /**
      * Display the specified resource.
      */
     public function show(string $id)
     {
-        $data = Predios::with('cliente')->findOrFail($id);
+        $data = Predios::with('cliente', 'categoria')->findOrFail($id);
 
         return Inertia::render('Predios/Show', [
             'datos' => $data,
-        ]); 
+        ]);
     }
 
     /**
@@ -136,7 +153,7 @@ class PrediosController extends Controller
     {
         $data = Predios::with('cliente')->findOrFail($id);
 
-         $clientes = Clientes::where('estado', 'activo')
+        $clientes = Clientes::where('estado', 'activo')
             ->when($request->search, function ($query) use ($request) {
                 $query->where('nombre', 'like', "%{$request->search}%")
                     ->orWhere('documento', 'like', "%{$request->search}%");
@@ -144,10 +161,19 @@ class PrediosController extends Controller
             ->orderBy('nombre')
             ->get(['id', 'nombre', 'documento']);
 
+        $barrios = Barrios::orderBy('id')
+            ->get(['id', 'nombre']);
+
+            $categoria = Categorias_predios::select('id', 'nombre')
+            ->orderBy('id')
+            ->get();
+
         return Inertia::render('Predios/Edit', [
             'datos' => $data,
+            'barrios' => $barrios,
             'clientes' => $clientes,
-             'filters' => [
+            'categoria' => $categoria,
+            'filters' => [
                 'search' => $request->search,
             ],
         ]);
@@ -162,11 +188,13 @@ class PrediosController extends Controller
 
         $validated = $request->validate([
 
-            'cliente_id' => 'required|integer|max:255',
+            'cliente_id' => 'required|integer',
+            'barrio_id' => 'required|integer',
             'matricula' => 'required|string|max:255',
-            'direccion' => 'required|string|max:255|unique:predios,direccion_predio,'. $data->id,
-            'ruta' => 'required|string|max:255|unique:predios,ruta,'. $data->id,
-            'estado' => 'required'
+            'direccion' => 'required|string|max:255|unique:predios,direccion_predio,' . $data->id,
+            'ruta' => 'required|string|max:255|unique:predios,ruta,' . $data->id,
+            'estado' => 'required',
+            'categoria_id' => 'required'
         ]);
 
         try {
@@ -175,9 +203,11 @@ class PrediosController extends Controller
             $data->update([
                 'cliente_id' => $validated['cliente_id'],
                 'direccion_predio' => $validated['direccion'],
+                'barrio_id' => $validated['barrio_id'],
                 'matricula_predial' => $validated['matricula'],
                 'ruta' => $validated['ruta'],
                 'estado_servicio' => $validated['estado'] ?? $data->estado,
+                'categoria_id' => $validated['categoria_id'],
             ]);
 
             DB::commit();

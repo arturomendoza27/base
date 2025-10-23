@@ -13,5 +13,6 @@ class TarifasSeeder extends Seeder
     public function run(): void
     {
         //
+        
     }
 }

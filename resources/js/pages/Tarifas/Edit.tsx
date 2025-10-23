@@ -30,8 +30,10 @@ export default function Edit({ datos }: EditProps) {
     const { data, setData, put, processing, errors } = useForm({
         nombre: datos.nombre || '',
         valor: datos.valor || '',
-        estado: datos.estado || '',
-         valor_letras: "",
+        valor_conexion: datos.valor_conexion || '',
+        valor_reconexion: datos.valor_reconexion || '',
+        // estado: datos.estado || '',
+        valor_letras: "",
     });
 
 
@@ -63,6 +65,27 @@ useEffect(() => {
             ...data,
             valor,
             valor_letras: numberToWords(numero) ? numberToWords(numero) : "",
+        })
+    }
+
+     const handleChangeValorR = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const valor_reconexion = e.target.value
+        const numero = parseFloat(valor_reconexion || "0")
+
+        setData({
+            ...data,
+            valor_reconexion,
+            valor_letras: valor_reconexion ? numberToWords(numero) : "",
+        })
+    }
+ const handleChangeValorC = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const valor_conexion = e.target.value
+        const numero = parseFloat(valor_conexion || "0")
+
+        setData({
+            ...data,
+            valor_conexion,
+            valor_letras: valor_conexion ? numberToWords(numero) : "",
         })
     }
 
@@ -122,6 +145,37 @@ useEffect(() => {
                                             />
                                             {errors.valor && <div className="text-red-600 text-sm mt-1">{errors.valor}</div>}
                                         </div>
+
+                                        <div className="space-y-2">
+                                            <label htmlFor="valor_conexion" className="block text-gray-700 text-sm font-bold mb-2">
+                                                Valor Conexión (punto)
+                                            </label>
+                                            <Input
+                                                id="valor_conexion"
+                                               value={data.valor_conexion}
+                                                onChange={handleChangeValorC}
+                                                type="text"
+                                                placeholder="0"
+                                                className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                            />
+                                            {errors.valor_conexion && <div className="text-red-600 text-sm mt-1">{errors.valor_conexion}</div>}
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label htmlFor="valor_reconexion" className="block text-gray-700 text-sm font-bold mb-2">
+                                                Valor Reconexión
+                                            </label>
+                                            <Input
+                                                id="valor_reconexion"
+                                               value={data.valor_reconexion}
+                                                onChange={handleChangeValorR}
+                                                type="text"
+                                                placeholder="0"
+                                                className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                            />
+                                            {errors.valor_reconexion && <div className="text-red-600 text-sm mt-1">{errors.valor_reconexion}</div>}
+                                        </div>
+
                                          <div className=' max-w-lg mx-auto'>
                                         <div className="w-full bg-blue-50 border border-blue-200 text-blue-900 rounded-md p-2 text-sm resize-none">
                                             <p className="text-xs text-blue-600 font-medium mb-1">MONTO EN LETRAS:</p>
@@ -129,7 +183,7 @@ useEffect(() => {
                                         </div>
                                     </div>
 
-                                        <div>
+                                        {/* <div>
                                             <label htmlFor="estado" className="block text-gray-700 text-sm font-bold mb-2">
                                                 Estado
                                             </label>
@@ -147,7 +201,7 @@ useEffect(() => {
                                                 </SelectContent>
                                             </Select>
 
-                                        </div>
+                                        </div> */}
                                     </div>
                                    
                                 </CardContent>

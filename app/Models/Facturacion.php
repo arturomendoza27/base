@@ -7,8 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Facturacion extends Model
 {
-     use HasFactory;
-
+    use HasFactory;
+    protected $table = 'facturacion';
     protected $fillable = [
         'cliente_id',
         'predio_id',
@@ -16,31 +16,39 @@ class Facturacion extends Model
         'numero',
         'fecha_emision',
         'fecha_vencimiento',
-        'tarifa',
-        'subtotal',
-        'impuestos',
-        'total',
+        'concepto',
+        'saldo_anterior',
+        'saldo_actual',
+        'saldo_conexion',
+        'saldo_reconexion',
+        'total_factura',
         'estado', // emitida, pagada, vencida, anulada
+        'generada_automaticamente',
     ];
 
     // Relaciones
     public function usuario()
     {
-        return $this->belongsTo(Usuario::class, 'usuario_id');
+        return $this->belongsTo(User::class, 'usuario_id');
+    }
+
+    public function cliente()
+    {
+        return $this->belongsTo(Clientes::class, 'cliente_id');
     }
 
     public function predio()
     {
-        return $this->belongsTo(Predio::class, 'predio_id');
+        return $this->belongsTo(Predios::class, 'predio_id');
     }
 
     public function ciclo()
     {
-        return $this->belongsTo(CicloFacturacion::class, 'ciclo_id');
+        return $this->belongsTo(CiclosFacturacion::class, 'ciclo_id');
     }
 
     public function pagos()
     {
-        return $this->hasMany(Pago::class, 'factura_id');
+        return $this->hasMany(Pagos::class, 'factura_id');
     }
 }
