@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Exports\PrediosExport;
 use App\Imports\PrediosImport;
 use App\Models\Barrios;
-use App\Models\Categorias_predios;
+use App\Models\CategoriasPredios;
 use App\Models\Clientes;
 use App\Models\Predios;
 use Illuminate\Support\Facades\DB;
@@ -59,7 +59,7 @@ class PrediosController extends Controller
         $barrios = Barrios::orderBy('id')
             ->get(['id', 'nombre']);
 
-        $categoria = Categorias_predios::select('id', 'nombre')
+        $categoria = CategoriasPredios::select('id', 'nombre')
             ->orderBy('id')
             ->get();
 
@@ -164,7 +164,7 @@ class PrediosController extends Controller
         $barrios = Barrios::orderBy('id')
             ->get(['id', 'nombre']);
 
-            $categoria = Categorias_predios::select('id', 'nombre')
+            $categoria = CategoriasPredios::select('id', 'nombre')
             ->orderBy('id')
             ->get();
 

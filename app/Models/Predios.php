@@ -36,13 +36,20 @@ class Predios extends Model
       // Un predio pertenece a una categoría
     public function categoria()
     {
-        return $this->belongsTo(Categorias_predios::class, 'categoria_id');
+        return $this->belongsTo(CategoriasPredios::class, 'categoria_id');
     }
 
     // Relación: un predio puede tener muchas facturas
     public function facturas()
     {
         return $this->hasMany(Facturacion::class, 'predio_id');
+    }
+
+     public function ultimaFactura()
+    {
+       return $this->facturas()
+                    ->orderByDesc('id') 
+                    ->first();
     }
 
 

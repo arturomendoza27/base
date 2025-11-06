@@ -3,7 +3,7 @@
 namespace App\Imports;
 
 use App\Models\Barrios;
-use App\Models\Categorias_predios;
+use App\Models\CategoriasPredios;
 use App\Models\Predios;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithBatchInserts;
@@ -22,7 +22,7 @@ class PrediosImport implements ToModel, WithHeadingRow, WithBatchInserts, WithCh
     public function __construct()
     {
         $this->barrio = Barrios::pluck('id', 'nombre')->toArray();
-        $this->categoria = Categorias_predios::pluck('id', 'nombre')->toArray();
+        $this->categoria = CategoriasPredios::pluck('id', 'nombre')->toArray();
     }
 
     public function model(array $row) 

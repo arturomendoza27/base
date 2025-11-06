@@ -36,6 +36,7 @@ interface CreateProps {
 export default function Create({ datos, barrios, categoria, filters }: CreateProps) {
     const [query, setQuery] = useState("");
     const [clientes, setClientes] = useState(datos)
+    
 
     const { data, setData, post, processing, errors } = useForm({
         cliente_id: "",

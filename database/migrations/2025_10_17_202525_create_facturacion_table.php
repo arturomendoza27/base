@@ -32,7 +32,7 @@ return new class extends Migration
             $table->decimal('total_factura', 12, 2)->default(0);
             
             // Estado de la factura emitida, pagada, vencida, anulada
-            $table->enum('estado', ['pendiente', 'pagada', 'vencida', 'anulada'])->default('pendiente');
+            $table->enum('estado', ['pendiente', 'pagada', 'vencida', 'anulada', 'abono'])->default('pendiente');
             $table->boolean('generada_automaticamente')->default(true);
 
             // Auditoría

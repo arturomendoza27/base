@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Categorias_predios;
+use App\Models\CategoriasPredios;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -21,17 +21,17 @@ class DatabaseSeeder extends Seeder
         $this->command->newLine();
 
         // 1. Crear permisos
-        $this->command->info('📝 Paso 1/5: Creando permisos...');
+        $this->command->info('📝 Paso 1/6: Creando permisos...');
         $this->call(PermissionSeeder::class);
         $this->command->newLine();
 
         // 2. Crear roles y asignar permisos
-        $this->command->info('👥 Paso 2/5: Creando roles...');
+        $this->command->info('👥 Paso 2/6: Creando roles...');
         $this->call(RoleSeeder::class);
         $this->command->newLine();
 
         // 3. Crear usuarios de prueba
-        $this->command->info('👤 Paso 3/5: Creando usuarios...');
+        $this->command->info('👤 Paso 3/6: Creando usuarios...');
         $this->call(UserSeeder::class);
         $this->command->newLine();
 
@@ -53,13 +53,18 @@ class DatabaseSeeder extends Seeder
         );
 
         // 4. Crear barrios
-        $this->command->info('📝 Paso 4/5: Creando barrios...');
+        $this->command->info('📝 Paso 4/6: Creando barrios...');
         $this->call(BarriosSeeder::class);
         $this->command->newLine();
 
          // 5. Crear categorias
-        $this->command->info('📝 Paso 5/5: Creando categorias...');
-        $this->call(Categorias_predios::class);
+        $this->command->info('📝 Paso 5/6: Creando categorias...');
+        $this->call(CategoriasPrediosSeeder::class);
+        $this->command->newLine();
+
+          // 6. Crear categorias
+        $this->command->info('📝 Paso 6/6: Creando ciclo de facturación...');
+        $this->call(CicloSeeder::class);
         $this->command->newLine();
 
         $this->command->newLine();

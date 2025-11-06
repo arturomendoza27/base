@@ -20,24 +20,69 @@ class FacturacionController extends Controller
      */
     public function index(Request $request)
     {
-        //
-        $data = Facturacion::with('cliente', 'predio', 'ciclo')
-            ->when($request->search, function ($query) use ($request) {
-                $query->where('direccion_predio', 'like', "%{$request->search}%");
-            })->orWhereRelation('cliente', 'nombre',  'like', "%{$request->search}%")
-            ->orWhereRelation('cliente', 'documento',  'like', "%{$request->search}%")
+        // cargamos facturas por ciclo
+        // $data = CiclosFacturacion::with('facturas.predio.cliente')
+        //     ->when($request->search, function ($query) use ($request) {
+        //         $query->where('facturas', 'id', 'like', "%{$request->search}%");
+        //     })
+        //     ->orWhereRelation('facturas', 'total_factura', 'like', "%{$request->search}%")
+        //     ->orWhereRelation('facturas.predio.cliente', 'nombre', 'like', "%{$request->search}%") // <-- búsqueda por nombre del cliente
+        //     ->orderByDesc('anio')
+        //     ->orderByDesc('mes')
+        //     ->paginate(5)
+        //     ->withQueryString();
 
-            ->orderBy('created_at', 'desc')
-            ->latest()
+
+        // return Inertia::render('Facturacion/Index', [
+        //     'datos' => $data,
+        //     'filters' => [
+        //         'search' => $request->search,
+        //     ],
+        // ]);
+
+        $ciclo = CiclosFacturacion::with('facturas.predio.cliente')
+            ->orderByDesc('anio')
+            ->orderByDesc('mes')
+            ->first(); 
+         if (!$ciclo) {
+            return redirect()
+                ->route('facturacion')
+                ->with('error', 'No existe un ciclo de facturación creado');
+        }
+        $data = Facturacion::conCicloAbierto()->with('predio.cliente', 'ciclo')
+           
+            ->when($request->search, function ($query) use ($request) {
+                $query->where('id', 'like', "%{$request->search}%")
+                    ->orWhere('total_factura', 'like', "%{$request->search}%")
+                    ->orWhereRelation('predio.cliente', 'nombre', 'like', "%{$request->search}%");
+            }) ->where('ciclo_id', $ciclo->id)
+            ->orderByDesc('fecha_emision')
             ->paginate(5)
             ->withQueryString();
-
         return Inertia::render('Facturacion/Index', [
             'datos' => $data,
             'filters' => [
                 'search' => $request->search,
             ],
         ]);
+
+        // $filter = Facturacion::with('cliente', 'predio', 'ciclo')
+        //     ->when($request->search, function ($query) use ($request) {
+        //         $query->where('direccion_predio', 'like', "%{$request->search}%");
+        //     })->orWhereRelation('cliente', 'nombre',  'like', "%{$request->search}%")
+        //     ->orWhereRelation('cliente', 'documento',  'like', "%{$request->search}%")
+
+        //     ->orderBy('created_at', 'desc')
+        //     ->latest()
+        //     ->paginate(5)
+        //     ->withQueryString();
+
+        // return Inertia::render('Facturacion/Index', [
+        //     'datos' => $data[0],
+        //     'filters' => [
+        //         'search' => $request->search,
+        //     ],
+        // ]);
     }
 
     /**
@@ -179,12 +224,14 @@ class FacturacionController extends Controller
             DB::commit();
 
 
+             return redirect()
+                ->route('facturacion.index')
+                ->with('success', "$contadorFacturas Facturas generadas exitosamente para el mes de $nuevoCiclo->mes de $nuevoCiclo->anio ");
 
-
-            return response()->json([
-                'message' => "Facturación generada exitosamente para {$contadorFacturas} predios.",
-                'ciclo' => $nuevoCiclo
-            ]);
+            // return response()->json([
+            //     'message' => "Facturación generada exitosamente para {$contadorFacturas} predios.",
+            //     'ciclo' => $nuevoCiclo
+            // ]);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([

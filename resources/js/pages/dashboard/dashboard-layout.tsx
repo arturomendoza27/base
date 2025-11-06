@@ -31,6 +31,7 @@ const navigation = [
   { name: "Tarifas", href: "/tarifas", icon: DollarSignIcon, permission: "tarifas.view"  },
   { name: "Clientes", href: "/clientes", icon: ContactRoundIcon, permission: "clientes.view" },
   { name: "Predios", href: "/predios", icon: Building2Icon, permission: "predios.view"  },
+  { name: "Ciclos", href: "/ciclos", icon: FileTextIcon, permission: "facturacion.view"  },
   { name: "Facturación", href: "/facturacion", icon: FileTextIcon, permission: "facturacion.view"  },
   { name: "Caja", href: "/caja", icon: WalletIcon, permission: "caja.view"  },
   { name: "Pagos", href: "/pagos", icon: CreditCardIcon, permission: "pagos.view"  },

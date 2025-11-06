@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Categorias_predios extends Model
+class CategoriasPredios extends Model
 {
     /** @use HasFactory<\Database\Factories\CategoriasPrediosFactory> */
     use HasFactory;
+    protected $table = 'categorias_predios';
      protected $fillable = ['nombre', 'descripcion'];
 
       // Una categoría tiene muchos predios

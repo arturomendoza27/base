@@ -7,18 +7,19 @@ use Illuminate\Database\Eloquent\Model;
 class Pagos extends Model
 {
     protected $table = 'pagos';
-
     protected $fillable = [
         'factura_id',
-        'cliente_id',//pendiente implementar
-        'predio_id',//pendiente implementar
+        //'cliente_id',//pendiente implementar
+        //'predio_id',//pendiente implementar
         'fecha_pago',
         'valor_pagado',
         'saldo_restante',
         'medio_pago',
+         'recibo_banco',
         'recibo_numero',
-        'observaciones',//pendiente implementar
-        'registrado_por',//pendiente implementar
+        'recibo_fecha',
+       // 'observaciones',//pendiente implementar
+       // 'registrado_por',//pendiente implementar
     ];
 
     /**

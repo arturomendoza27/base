@@ -1,9 +1,9 @@
-import { BreadcrumbItem, CicloFacturacion, Factura, Filters, PaginatedData, Predio } from '@/types';
+import { BreadcrumbItem, CicloFacturacion, Cliente, Filters, PaginatedData, Tarifa } from '@/types';
 import React, { useState } from 'react';
 import { DashboardLayout } from '../dashboard/dashboard-layout';
 import { can } from '@/lib/can';
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { EditIcon, EyeIcon, MoreHorizontalIcon, PlusIcon, SearchIcon, TrashIcon, XIcon } from 'lucide-react';
+import { EditIcon, EyeIcon, MoreHorizontalIcon, PlusIcon, SearchIcon, TrashIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -11,30 +11,27 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { formatoPesos } from '@/lib/fomato_numeros';
-import predios from '../../routes/predios/index';
-import { Cliente } from '../../types/index';
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
-    title: 'Predios',
-    href: '/predios',
+    title: 'Ciclos',
+    href: '/ciclos',
   },
 ];
 
 
 
 interface IndexProps {
-  datos: PaginatedData<Factura>;
+  datos: PaginatedData<CicloFacturacion>;
   filters: Filters;
 }
 
-export default function Index({ datos, filters }: IndexProps) {
 
+
+export default function Index({ datos, filters }: IndexProps) {
   const [tarifa, setTarifa] = useState(datos.data);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [idToDelete, setIdToDelete] = useState<number | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [taskId, setTaskId] = useState<string | null>(null);
+  const [idToDelete, setIdToDelete] = useState<number | null>(null)
   // Filter users based on search term
   const { data, setData } = useForm({
     search: filters.search || '',
@@ -44,7 +41,7 @@ export default function Index({ datos, filters }: IndexProps) {
     setData('search', userInput)
     const queryString = userInput ? { search: userInput } : {}
 
-    router.get('/facturacion', queryString, {
+    router.get('/ciclos', queryString, {
       preserveState: true,
       preserveScroll: true,
     });
@@ -53,7 +50,7 @@ export default function Index({ datos, filters }: IndexProps) {
   const handleDeleteConfirm = () => {
     if (idToDelete) {
       setTarifa(tarifa.filter((t) => t.id !== idToDelete))
-      router.delete(`/facturar/${idToDelete}`, {
+      router.delete(`/ciclos/${idToDelete}`, {
         preserveScroll: true,
       });
       setIdToDelete(null)
@@ -61,133 +58,43 @@ export default function Index({ datos, filters }: IndexProps) {
     }
   }
 
-  const handleClear = () => {
-    setData({
-      search: '',
-    })
-
-    const queryString = {}
-
-    router.get('/facturacion', queryString, {
-      preserveState: true,
-      preserveScroll: true,
-    });
-
-
-  }
-
-
-  const handleClick = async () => {
-    if (loading) return;
-    setLoading(true);
-
-    try {
-      const resp = await fetch("/facturar", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRF-TOKEN": (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? "",
-        },
-        credentials: "same-origin",
-        body: JSON.stringify({
-          filtros: {
-            rango_fecha: { desde: "2025-10-01", hasta: "2025-10-31" },
-            tipo: "masiva",
-          },
-        }),
-      });
-
-      if (!resp.ok) throw new Error(`Error en servidor: ${resp.status}`);
-
-      const data = await resp.json();
-      console.log("Respuesta:", data);
-
-      setTaskId(data.task_id || null);
-      alert(data.message || "Facturación masiva iniciada.");
-    } catch (e) {
-      console.error("Error en handleClick:", e);
-      alert("Error iniciando la facturación masiva. ");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-
   return (
     <DashboardLayout>
+      
       <div className="space-y-6">
+        
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-balance">Gestión de la Facturación</h1>
-            <p className="text-muted-foreground">Administra la facturación agua de red</p>
+            <h1 className="text-3xl font-bold text-balance">Gestión de los Ciclos de Facturación</h1>
+            <p className="text-muted-foreground">Administra los cilos de facturación</p>
           </div>
           <div className="flex space-x-2">
-            {can('facturacion.export') && (
-              <Button
-                type="button"
-                className="bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300 cursor-pointer"
-                onClick={() => (window.location.href = '/facturacion/facturar')}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-4 h-4 mr-2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v14m7-7H5" />
-                </svg>
-                Exportar
-              </Button>
-            )}
-            {can('facturacion.create') && (
+            {can('tarifas.create') && (
               <Button
                 type="button"
                 className="bg-black text-white hover:bg-gray-900 cursor-pointer transition"
-                onClick={() => (window.location.href = '/facturacion/create')}
+                onClick={() => (window.location.href = '/ciclos/create')}
               >
                 <PlusIcon className="w-4 h-4 mr-2" />
-                Facturar
+                Nueva Tarifa
               </Button>
             )}
-            {can('facturacion.create') && (
-              <Button
-                type="button"
-                className="bg-black text-white hover:bg-gray-900 cursor-pointer transition"
-                onClick={handleClick}
-                disabled={loading}
-              >
-                <PlusIcon className="w-4 h-4 mr-2" />
-                {loading ? "Iniciando..." : "Generar facturación masiva"}
-              </Button>
-
-            )}
-
-            {taskId && <div>ID de tarea: {taskId} — revisa el estado en la sección de tareas.</div>}
           </div>
         </div>
         <Card>
           <CardHeader>
-            <CardTitle>Lista facturas emitidas para el mes </CardTitle> {/*obtener dato de ciclo de facturacion */}
+            <CardTitle>Lista de Tarifas</CardTitle>
             <div className="flex items-center gap-4">
               <div className="relative flex-1 max-w-sm">
                 <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  id="search"
                   type='text'
                   name='search'
-                  placeholder="Buscar facturas..."
+                  placeholder="Buscar tarifas..."
                   onChange={handleSearchChange}
                   value={data.search}
                   className="pl-10"
                 />
-                <button
-                  type="button"
-                  onClick={handleClear}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  <XIcon className="h-4 w-4" />
-                </button>
               </div>
             </div>
           </CardHeader>
@@ -197,11 +104,8 @@ export default function Index({ datos, filters }: IndexProps) {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>No. Factura</TableHead>
+                    <TableHead>Años</TableHead>
                     <TableHead>Mes</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Direccion</TableHead>
-                    <TableHead>Total</TableHead>
                     <TableHead>Estado</TableHead>
                     <TableHead className="w-[70px]">Acciones</TableHead>
                   </TableRow>
@@ -212,58 +116,26 @@ export default function Index({ datos, filters }: IndexProps) {
                       <TableRow key={dato.id}>
                         <TableCell>
                           <div>
-                            <div className="font-medium">{dato.id}</div>
+                            <div className="font-medium">{dato.anio}</div>
                           </div>
                         </TableCell>
-                        <TableCell>
+                            <TableCell>
                           <div>
-                            <div className="font-medium">{dato.ciclo.mes}</div>
-                            <div className="text-sm text-muted-foreground"> {dato.ciclo.anio}</div>
+                            <div className="text-sm text-muted-foreground">{dato.mes}</div>
                           </div>
                         </TableCell>
+                    
                         <TableCell>
-                          <div>
-                            <div className="font-medium">{dato.predio.cliente.nombre}</div>
-                            <div className="text-sm text-muted-foreground">Código Cliente: {dato.predio.cliente.id}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{dato.predio.direccion_predio}</div>
-                            <div className="text-sm text-muted-foreground"> Id: {dato.predio.id}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{formatoPesos(dato.total_factura)}</div>
-
-                          </div>
-                        </TableCell>
-                        {/*'pendiente', 'pagada', 'vencida', 'anulada'*/}
-                        <TableCell>
-                          {dato.estado === "pendiente" ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                              Pendiente
-                            </span>
-                          ) : dato.estado === "pagada" ? (
+                          {dato.estado === "abierto" ? (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                              Pagada
-                            </span>
-                          ) : dato.estado === "vencida" ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                              Vencida
-                            </span>
-                          ) : dato.estado === "abono" ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                              Abono
+                              Abierto
                             </span>
                           ) : (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                              Anulada
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                              Cerrado
                             </span>
                           )}
                         </TableCell>
-
                         <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -272,10 +144,10 @@ export default function Index({ datos, filters }: IndexProps) {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              {can('faturacion.show') && (
+                              {can('tarifas.show') && (
                                 <DropdownMenuItem asChild>
                                   <Link
-                                    href={`/facturacion/${dato.id}`}
+                                    href={`/ciclos/${dato.id}`}
                                     className="flex items-center"
                                   >
                                     <EyeIcon className="h-4 w-4 mr-2" />
@@ -284,10 +156,10 @@ export default function Index({ datos, filters }: IndexProps) {
                                 </DropdownMenuItem>
                               )}
 
-                              {can('facturacion.edit') && (
+                              {can('tarifas.edit') && (
                                 <DropdownMenuItem asChild>
                                   <Link
-                                    href={`/facturacion/${dato.id}/edit`}
+                                    href={`/tarifas/${dato.id}/edit`}
                                     className="flex items-center"
                                   >
                                     <EditIcon className="h-4 w-4 mr-2" />
@@ -296,7 +168,7 @@ export default function Index({ datos, filters }: IndexProps) {
                                 </DropdownMenuItem>
                               )}
 
-                              {can('facturacion.delete') && (
+                              {can('tarifas.delete') && (
                                 <DropdownMenuItem asChild>
                                   <button
                                     onClick={() => {
@@ -360,6 +232,6 @@ export default function Index({ datos, filters }: IndexProps) {
       </AlertDialog>
 
     </DashboardLayout >
-  )
+  );
 
 }

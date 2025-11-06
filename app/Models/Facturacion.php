@@ -47,6 +47,14 @@ class Facturacion extends Model
         return $this->belongsTo(CiclosFacturacion::class, 'ciclo_id');
     }
 
+
+    public function scopeConCicloAbierto($query)
+    {
+        return $query->whereHas('ciclo', function ($q) {
+            $q->where('estado', 'abierto');
+        });
+    }
+
     public function pagos()
     {
         return $this->hasMany(Pagos::class, 'factura_id');

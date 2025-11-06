@@ -23,7 +23,7 @@ class Tarifas extends Model
     // Una tarifa pertenece a una categoría
     public function categoria()
     {
-        return $this->belongsTo(Categorias_predios::class, 'categoria_id');
+        return $this->belongsTo(CategoriasPredios::class, 'categoria_id');
     }
 
       // Scope para obtener la tarifa vigente

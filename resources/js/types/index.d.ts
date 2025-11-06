@@ -93,14 +93,7 @@ export interface Predio {
     categoria: CategoriaPredio;
 }
 
-export interface CicloFacturacion {
-  id: number;
-  anio: number;
-  mes: number;
-  estado: 'abierto', 'cerrado';
-  fecha_inicio: string;
-  fecha_fin: string;
-}
+
 
 export interface Factura {
   id: number;
@@ -115,15 +108,23 @@ export interface Factura {
   saldo_conexion: number;
   saldo_reconexion: number;
   total_factura: number;
-  estado: 'pendiente' | 'pagada' | 'vencida' | 'anulada';
+  estado: 'pendiente' | 'pagada' | 'vencida' | 'anulada' | 'abono';
   generada_automaticamente: boolean;
   fecha_pago?: string;
   observaciones?: string;
   cliente: Cliente;
   predio: Predio;
-  ciclo: CicloFacturacion;
+  ciclo: CicloFacturacion
 }
 
+export interface CicloFacturacion {
+  id: number;
+  anio: number;
+  mes: number;
+  estado: 'abierto', 'cerrado';
+  fecha_inicio: string;
+  fecha_fin: string;
+}
 export interface Auth {
     user: User | null;
     permissions: string[];

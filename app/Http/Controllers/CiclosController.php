@@ -3,29 +3,30 @@
 namespace App\Http\Controllers;
 
 use App\Models\CategoriasPredios;
-use App\Models\Tarifas;
+use App\Models\CiclosFacturacion;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 
-class TarifasController extends Controller
+class CiclosController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        $data = Tarifas::with('categoria')->when($request->search, function ($query) use ($request) {
-            $query->where('nombre', 'like', "%{$request->search}%")
+        $data = CiclosFacturacion::when($request->search, function ($query) use ($request) {
+            $query->where('anio', 'like', "%{$request->search}%")
+            ->orWhere('mes', 'like', "%{$request->search}%")
                 ->orWhere('estado', 'like', "%{$request->search}%");
         })
             ->orderBy('created_at', 'desc')
             ->latest()
-            ->paginate(5)
+            ->paginate(12)
             ->withQueryString();
 
-        return Inertia::render('Tarifas/Index', [
+        return Inertia::render('Ciclos/Index', [
             'datos' => $data,
             'filters' => [
                 'search' => $request->search,
@@ -42,7 +43,7 @@ class TarifasController extends Controller
             ->orderBy('id')
             ->get();
 
-        return Inertia::render('Tarifas/Create', [
+        return Inertia::render('Ciclos/Create', [
             'datos' => $data,
         ]);
     }
@@ -64,7 +65,7 @@ class TarifasController extends Controller
         try {
             // DB::beginTransaction();
 
-            // $datos = Tarifas::create([
+            // $datos = CiclosFacturacion::create([
             //     'categoria_id' =>$validated['categoria_id'],
             //     'nombre' => ucfirst(strtolower($validated['nombre'])),
             //     'valor' => $validated['valor'],
@@ -76,10 +77,10 @@ class TarifasController extends Controller
             // DB::commit();
 
 
-          Tarifas::crearNuevaTarifa($validated);
+          CiclosFacturacion::crearNuevaTarifa($validated);
 
             return redirect()
-                ->route('tarifas.index')
+                ->route('ciclos.index')
                 ->with('success', 'Tarifa creada con Exito.');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -96,9 +97,9 @@ class TarifasController extends Controller
      */
     public function show(string $id)
     {
-         $data = Tarifas::findOrFail($id);
+         $data = CiclosFacturacion::findOrFail($id);
 
-        return Inertia::render('Tarifas/Show', [
+        return Inertia::render('Ciclos/Show', [
             'datos' => $data,
         ]);
     }
@@ -108,8 +109,8 @@ class TarifasController extends Controller
      */
     public function edit(string $id)
     {
-        $data = Tarifas::findOrFail($id);
-        return Inertia::render('Tarifas/Edit', [
+        $data = CiclosFacturacion::findOrFail($id);
+        return Inertia::render('Ciclos/Edit', [
             'datos' => $data
         ]);
     }
@@ -119,7 +120,7 @@ class TarifasController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $data = Tarifas::findOrFail($id);
+        $data = CiclosFacturacion::findOrFail($id);
 
         $validated = $request->validate([
             'nombre' => 'required|string|max:255,' . $data->id,
@@ -145,7 +146,7 @@ class TarifasController extends Controller
             DB::commit();
 
             return redirect()
-                ->route('tarifas.index')
+                ->route('ciclos.index')
                 ->with('success', 'Tarifa actualizada con exito.');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -162,7 +163,7 @@ class TarifasController extends Controller
      */
     public function destroy(string $id)
     {
-        $data = Tarifas::inactiva()->findOrFail($id);
+        $data = CiclosFacturacion::inactiva()->findOrFail($id);
 
         try {
             DB::beginTransaction();
@@ -172,7 +173,7 @@ class TarifasController extends Controller
             DB::commit();
 
             return redirect()
-                ->route('tarifas.index')
+                ->route('ciclos.index')
                 ->with('success', 'Tarifa borrada exitosamente.');
         } catch (\Exception $e) {
             DB::rollBack();

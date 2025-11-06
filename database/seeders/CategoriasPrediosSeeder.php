@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Categorias_predios;
+use App\Models\CategoriasPredios;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -13,23 +13,27 @@ class CategoriasPrediosSeeder extends Seeder
      */
     public function run(): void
     {
-   
-      
-        Categorias_predios::insert([
+
+        $now = now();
+        CategoriasPredios::insert([
             [
-            'nombre' => 'Preferencial',
-            'descripcion' => 'Tarifa preferencial'
+                'nombre' => 'Preferencial',
+                'descripcion' => 'Tarifa preferencial',
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
             [
-                'nombre' => 'Residencial', 
-                'descripcion' => 'Tarifa residencial'
+                'nombre' => 'Residencial',
+                'descripcion' => 'Tarifa residencial',
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
-             [
-                'nombre' => 'Comercial', 
-                'descripcion' => 'Tarifa comercial'
+            [
+                'nombre' => 'Comercial',
+                'descripcion' => 'Tarifa comercial',
+                'created_at' => $now,
+                'updated_at' => $now,
             ],
         ]);
-       
-        
     }
 }

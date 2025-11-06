@@ -1,0 +1,28 @@
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .recibo, .recibo *,
+  .panel-pago, .panel-pago * {
+    visibility: visible;
+  }
+  body {
+    display: flex;
+    width: 100%;
+    transform: scale(0.6);
+    transform-origin: top left;
+  }
+  .recibo {
+    position: absolute;
+    top: 0;
+   
+  }
+  .panel-pago {
+    position: fixed;
+     width: 35%;
+    left: 40px;
+    top:350px;
+    page-break-before:auto;
+    
+  }
+}
