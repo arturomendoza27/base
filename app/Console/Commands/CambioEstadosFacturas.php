@@ -35,8 +35,8 @@ class CambioEstadosFacturas extends Command
         // Ejecutar solo después del día 15
         if ($hoy->day <= 15) {
             $this->info('Aún no se ejecuta la tarea (solo después del día 15).');
-             $text = "[" . date("Y-m-d H:i:s") . "]:Aún no se ejecuta la tarea (solo después del día 15).";
-             Storage::append("pruebas.txt", $text);
+             // $text = "[" . date("Y-m-d H:i:s") . "]:Aún no se ejecuta la tarea (solo después del día 15).";
+            //  Storage::append("pruebas.txt", $text);
             return 0;
         }
 

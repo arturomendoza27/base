@@ -1,4 +1,7 @@
 @media print {
+  .hide-on-print { display: none !important; }
+  .print-main { width: 100% !important; }
+  
   body * {
     visibility: hidden;
   }

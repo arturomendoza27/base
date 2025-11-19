@@ -93,38 +93,66 @@ export interface Predio {
     categoria: CategoriaPredio;
 }
 
-
-
 export interface Factura {
-  id: number;
-  cliente_id: number;
-  predio_id: number;
-  ciclo_id: number;
-  fecha_emision: string;
-  fecha_vencimiento: string;
-  concepto: string;
-  saldo_anterior: number;
-  saldo_actual: number;
-  saldo_conexion: number;
-  saldo_reconexion: number;
-  total_factura: number;
-  estado: 'pendiente' | 'pagada' | 'vencida' | 'anulada' | 'abono';
-  generada_automaticamente: boolean;
-  fecha_pago?: string;
-  observaciones?: string;
-  cliente: Cliente;
-  predio: Predio;
-  ciclo: CicloFacturacion
+    id: number;
+    cliente_id: number;
+    predio_id: number;
+    ciclo_id: number;
+    fecha_emision: string;
+    fecha_vencimiento: string;
+    concepto: string;
+    saldo_anterior: number;
+    saldo_actual: number;
+    saldo_conexion: number;
+    saldo_reconexion: number;
+    total_factura: number;
+    estado: 'pendiente' | 'pagada' | 'vencida' | 'anulada' | 'abono';
+    generada_automaticamente: boolean;
+    fecha_pago?: string;
+    observaciones?: string;
+    cliente: Cliente;
+    predio: Predio;
+    ciclo: CicloFacturacion;
 }
 
 export interface CicloFacturacion {
-  id: number;
-  anio: number;
-  mes: number;
-  estado: 'abierto', 'cerrado';
-  fecha_inicio: string;
-  fecha_fin: string;
+    id: number;
+    anio: number;
+    mes: number;
+    estado: 'abierto';
+    cerrado;
+    fecha_inicio: string;
+    fecha_fin: string;
 }
+
+export interface CicloFacturacion {
+    id: number;
+    anio: number;
+    mes: number;
+    estado: 'abierto';
+    cerrado;
+    fecha_inicio: string;
+    fecha_fin: string;
+}
+
+export interface MetricasCiclos {
+    cartera_vencida: number;
+    ciclo: string;
+    numero_abonadas: number;
+    numero_facturas: number;
+    numero_pagadas: number;
+    numero_suspendidas: number;
+    numero_vencidas: number;
+    saldo_restante_abonadas: number;
+    total_facturado: number;
+    total_recaudado: number;
+    total_recaudos_anteriores: number;
+    valor_abonadas: number;
+    valor_pagadas: number;
+    valor_suspendidas: number;
+    valor_vencidas: number;
+}
+
 export interface Auth {
     user: User | null;
     permissions: string[];

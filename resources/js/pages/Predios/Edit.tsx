@@ -253,8 +253,8 @@ export default function Edit({ datos, clientes, barrios, categoria }: EditProps)
                                                 Estado
                                             </label>
                                             <Select
-                                                value={(data.estado as "activo" | "suspendido" | "retirado") || ''}
-                                                onValueChange={(value: "activo" | "suspendido" | "retirado") => setData('estado', value)}
+                                                value={(data.estado as "activo" | "suspendido" | "desconectado") || ''}
+                                                onValueChange={(value: "activo" | "suspendido" | "desconectado") => setData('estado', value)}
 
                                             >
                                                 <SelectTrigger className="w-full">
@@ -263,7 +263,7 @@ export default function Edit({ datos, clientes, barrios, categoria }: EditProps)
                                                 <SelectContent>
                                                     <SelectItem value='activo'   >Activo</SelectItem >
                                                     <SelectItem value='suspendido' >Suspendido</SelectItem >
-                                                    <SelectItem value='retirado' > Retirado</SelectItem>
+                                                    <SelectItem value='desconectado' > desconectado</SelectItem>
                                                 </SelectContent>
                                             </Select>
 

@@ -24,6 +24,7 @@ class Facturacion extends Model
         'total_factura',
         'estado', // emitida, pagada, vencida, anulada
         'generada_automaticamente',
+        'observaciones'
     ];
 
     // Relaciones

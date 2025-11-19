@@ -8,6 +8,7 @@ use App\Models\Facturacion;
 use App\Models\Pagos;
 use App\Models\Predios;
 use App\Models\Tarifas;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -39,26 +40,26 @@ class FacturacionController extends Controller
         //         'search' => $request->search,
         //     ],
         // ]);
-
         $ciclo = CiclosFacturacion::with('facturas.predio.cliente')
-            ->orderByDesc('anio')
-            ->orderByDesc('mes')
-            ->first(); 
-         if (!$ciclo) {
+            ->latest('created_at')
+            ->first();
+        if (!$ciclo) {
             return redirect()
                 ->route('facturacion')
                 ->with('error', 'No existe un ciclo de facturación creado');
         }
         $data = Facturacion::conCicloAbierto()->with('predio.cliente', 'ciclo')
-           
+
             ->when($request->search, function ($query) use ($request) {
                 $query->where('id', 'like', "%{$request->search}%")
                     ->orWhere('total_factura', 'like', "%{$request->search}%")
                     ->orWhereRelation('predio.cliente', 'nombre', 'like', "%{$request->search}%");
-            }) ->where('ciclo_id', $ciclo->id)
+            })->where('ciclo_id', $ciclo->id)
             ->orderByDesc('fecha_emision')
             ->paginate(5)
             ->withQueryString();
+
+        // dd( $ciclo);
         return Inertia::render('Facturacion/Index', [
             'datos' => $data,
             'filters' => [
@@ -97,8 +98,11 @@ class FacturacionController extends Controller
     /**
      * Facturacion masiva .
      */
-
-    public function Facturar()
+    public function facturar(Request $request)
+    {
+        return Inertia::render('Facturacion/Facturar');
+    }
+    public function Masiva(Request $request)
     {
 
         DB::beginTransaction();
@@ -113,9 +117,9 @@ class FacturacionController extends Controller
             $ultimoCiclo = CiclosFacturacion::latest('id')->first();
 
             if ($ultimoCiclo && $ultimoCiclo->estado !== 'cerrado') {
-                return response()->json([
-                    'error' => 'El ciclo anterior aún no está cerrado. No puede iniciar un nuevo proceso de facturación.'
-                ], 400);
+                return redirect()
+                    ->route('facturacion.index')
+                    ->with('error', "El ciclo anterior aún no está cerrado. No puede iniciar un nuevo proceso de facturación. ");
             }
 
             // === 2️⃣ Verificar que no exista ya un ciclo para el mes actual ===
@@ -124,9 +128,9 @@ class FacturacionController extends Controller
                 ->exists();
 
             if ($existeCiclo) {
-                return response()->json([
-                    'error' => 'Ya existe un ciclo de facturación para este mes.'
-                ], 400);
+                return redirect()
+                    ->route('facturacion.index')
+                    ->with('success', "Ya existe un ciclo de facturación para este mes. ");
             }
 
             // === 3️⃣ Crear el nuevo ciclo ===
@@ -134,8 +138,8 @@ class FacturacionController extends Controller
                 'anio' => $anio,
                 'mes' => $mes,
                 'estado' => 'abierto',
-                'fecha_inicio' => $fechaActual->startOfMonth(),
-                'fecha_fin' => $fechaActual->endOfMonth(),
+                'fecha_inicio' => Carbon::now()->startOfMonth(),
+                'fecha_fin' => Carbon::now()->endOfMonth(),
             ]);
 
             // === 4️⃣ Iniciar proceso de facturación ===
@@ -154,7 +158,23 @@ class FacturacionController extends Controller
                     ->first();
                 // Si no hay tarifa vigente, saltamos el predio 
                 if (!$tarifa) continue;
+                // Verificar si las dos últimas facturas están vencidas
+                $ultimasDos = Facturacion::where('predio_id', $predio->id)
+                    ->orderByDesc('fecha_emision')
+                    ->take(2)
+                    ->get();
 
+                // Solo aplicar si existen al menos 2 facturas
+                if ($ultimasDos->count() === 2) {
+                    $ambasVencidas = $ultimasDos->every(fn($f) => $f->estado === 'vencida');
+                    if ($ambasVencidas) {
+                        // Marcar predio como suspendido si manejas ese estado
+                        $predio->update(['estado_servicio' => 'suspendido']);
+
+                        // Saltar este predio, no generar factura
+                        continue;
+                    }
+                }
                 $ultimaFactura = Facturacion::where('predio_id', $predio->id)
                     ->latest('id')
                     ->first();
@@ -192,7 +212,7 @@ class FacturacionController extends Controller
                     'cliente_id' => $predio->cliente_id,
                     'categoria_id' => $predio->categoria_id,
                     'tarifa_id' => $tarifa->id,
-                    'fecha_emision' => $fechaActual,
+                    'fecha_emision' => Carbon::now()->startOfMonth(),
                     'fecha_vencimiento' => $fechaActual->copy()->addDays(15),
                     'concepto' => $concepto,
                     'saldo_anterior' => $saldoAnterior, //operacion para obetener este saldo en facturas
@@ -202,6 +222,7 @@ class FacturacionController extends Controller
                     'total_factura' => $totalFactura,
                     'estado' => 'pendiente', // 👈 correcto estado por defecto
                     'generada_automaticamente' => true,
+                    'observaciones' => $request->observaciones,
                 ]);
 
                 if ($totalFactura <= 0) {
@@ -224,7 +245,7 @@ class FacturacionController extends Controller
             DB::commit();
 
 
-             return redirect()
+            return redirect()
                 ->route('facturacion.index')
                 ->with('success', "$contadorFacturas Facturas generadas exitosamente para el mes de $nuevoCiclo->mes de $nuevoCiclo->anio ");
 
@@ -234,9 +255,12 @@ class FacturacionController extends Controller
             // ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json([
-                'error' => 'Error al generar la facturación: ' . $e->getMessage()
-            ], 500);
+            return redirect()
+                ->route('facturacion.index')
+                ->with('success', "Error al generar la facturación");
+            // return response()->json([
+            //     'error' => 'Error al generar la facturación: ' . $e->getMessage()
+            // ], 500);
         }
     }
     /**
@@ -287,5 +311,60 @@ class FacturacionController extends Controller
     public function destroy(Facturacion $facturacion)
     {
         //
+    }
+
+    public function facturasPdf($id)
+    {
+        // Aumenta límites para seguridad
+        ini_set('max_execution_time', 300);
+        ini_set('memory_limit', '512M');
+
+
+        $facturas = Facturacion::with('predio.barrio', 'predio.cliente', 'ciclo')
+            ->where('ciclo_id', $id)
+            ->orderByRaw(
+                "CAST( (SELECT ruta FROM predios WHERE predios.id = facturacion.predio_id LIMIT 1) AS UNSIGNED )"
+            )
+            ->get();
+
+
+        // $factura = Facturacion::with('predio.cliente', 'ciclo')
+        //     ->where('ciclo_id', $id)
+        //     ->orderByDesc('ruta')
+        //     ->get();
+        $pdf = Pdf::loadView('pdf.facturacion', [
+            'facturas' => $facturas
+        ])->setPaper('letter', 'portrait');
+
+        return $pdf->stream('facturacion_ciclo_' . $id . '.pdf');
+        // return $pdf->stream("facturacion.pdf");  //personalizar por nombre de mes y año
+    }
+
+
+    public function facturasPdfCliente($id)
+    {
+        // Aumenta límites para seguridad
+        ini_set('max_execution_time', 300);
+        ini_set('memory_limit', '512M');
+
+
+        $factura = Facturacion::with('predio.barrio', 'predio.cliente', 'ciclo')
+            ->where('predio_id', $id)
+            ->latest('created_at')
+            ->first();
+
+
+        // $factura = Facturacion::with('predio.cliente', 'ciclo')
+        //     ->where('ciclo_id', $id)
+        //     ->orderByDesc('ruta')
+        //     ->get();
+
+
+        $pdf = Pdf::loadView('pdf.factura', [
+            'factura' => $factura
+        ])->setPaper('letter', 'portrait');
+
+        return $pdf->stream('facturacion_predio_' . $id . '.pdf');
+        // return $pdf->stream("facturacion.pdf");  //personalizar por nombre de mes y año
     }
 }

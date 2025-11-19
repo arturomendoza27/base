@@ -59,7 +59,7 @@ export default function Index({ clientes, filters }: IndexProps) {
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <div>
+          <div> 
             <h1 className="text-3xl font-bold text-balance">Gestión de Clientes</h1>
             <p className="text-muted-foreground">Administra los clientes</p>
           </div>
@@ -98,7 +98,7 @@ export default function Index({ clientes, filters }: IndexProps) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v14m7-7H5" />
                 </svg>
                 Exportar
-              </Button>
+              </Button> 
             )}
             {can('clientes.create') && (
               <Button

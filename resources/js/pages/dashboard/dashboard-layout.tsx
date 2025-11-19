@@ -17,8 +17,8 @@ import {
   CreditCardIcon,
   WalletIcon,
   Building2Icon,
-ContactRoundIcon,
-BookLockIcon,
+  ContactRoundIcon,
+  BookLockIcon,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { can } from '@/lib/can';
@@ -28,19 +28,22 @@ const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: HomeIcon },
   { name: "Usuarios", href: "/users", icon: UsersIcon, permission: "users.view" },
   { name: "Roles", href: "/roles", icon: BookLockIcon, permission: "roles.view" },
-  { name: "Tarifas", href: "/tarifas", icon: DollarSignIcon, permission: "tarifas.view"  },
+  { name: "Tarifas", href: "/tarifas", icon: DollarSignIcon, permission: "tarifas.view" },
   { name: "Clientes", href: "/clientes", icon: ContactRoundIcon, permission: "clientes.view" },
-  { name: "Predios", href: "/predios", icon: Building2Icon, permission: "predios.view"  },
-  { name: "Ciclos", href: "/ciclos", icon: FileTextIcon, permission: "facturacion.view"  },
-  { name: "Facturación", href: "/facturacion", icon: FileTextIcon, permission: "facturacion.view"  },
-  { name: "Caja", href: "/caja", icon: WalletIcon, permission: "caja.view"  },
-  { name: "Pagos", href: "/pagos", icon: CreditCardIcon, permission: "pagos.view"  },
-  { name: "Reportes", href: "/reportes", icon: BarChart3Icon, permission: "reportes.view"  },
-  { name: "Configuración", href: "/settings", icon: SettingsIcon, permission: "settings.view"  },
+  { name: "Predios", href: "/predios", icon: Building2Icon, permission: "predios.view" },
+  { name: "Ciclos", href: "/ciclos", icon: FileTextIcon, permission: "cicloFacturacion.view" },
+  { name: "Facturación", href: "/facturacion", icon: FileTextIcon, permission: "facturacion.view" },
+  { name: "Caja", href: "/caja", icon: WalletIcon, permission: "caja.view" },
+  { name: "Pagos", href: "/pagos", icon: CreditCardIcon, permission: "pagos.view" },
+  { name: "Reportes", href: "/reportes", icon: BarChart3Icon, permission: "reportes.view" },
+  { name: "Configuración", href: "/settings", icon: SettingsIcon, permission: "settings.view" },
 
 ]
-
-export function DashboardLayout({ children }: { children: React.ReactNode }) {
+interface DashboardLayoutProps {
+  children: React.ReactNode;
+  fullscreen?: boolean;
+}
+export function DashboardLayout({ children, fullscreen = false }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { messages } = usePage().props
   useEffect(() => {
@@ -87,29 +90,42 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   )
 
   return (
+
     <div className="flex h-screen bg-background">
       {/* Sidebar Desktop */}
       <div className="hidden md:flex md:flex-shrink-0">
         <div className="flex flex-col w-64 bg-card border-r border-border">
-          <Sidebar />
+          {!fullscreen && (
+            <Sidebar />
+          )}
+
         </div>
       </div>
 
       {/* Sidebar Mobile */}
-      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-        <SheetTrigger asChild className="md:hidden">
-          <Button variant="ghost" size="icon" className="fixed top-4 left-4 z-40">
-            <MenuIcon className="h-6 w-6" />
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="left" className="p-0 w-64">
-          <Sidebar mobile />
-        </SheetContent>
-      </Sheet>
-
+      {!fullscreen && (
+        <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+          <SheetTrigger asChild className="md:hidden">
+            <Button variant="ghost" size="icon" className="fixed top-4 left-4 z-40">
+              <MenuIcon className="h-6 w-6" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="p-0 w-64">
+            <Sidebar mobile />
+          </SheetContent>
+        </Sheet>
+      )}
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+      {/* <div className="flex-1 flex flex-col overflow-hidden"> */}
+      <div className="flex-1">
+        <main
+          className={fullscreen
+            ? "fixed inset-0 z-50 bg-background overflow-auto p-6"
+            : "flex-1 overflow-y-auto p-6"
+          }
+        >
+          {children}
+        </main>
       </div>
     </div>
   )

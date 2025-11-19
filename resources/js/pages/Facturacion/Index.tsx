@@ -13,6 +13,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { formatoPesos } from '@/lib/fomato_numeros';
 import predios from '../../routes/predios/index';
 import { Cliente } from '../../types/index';
+import FacturaPdf from '@/components/factura-pdf';
+import FacturaPdfMasiva from '@/components/factura-pdf-masiva';
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
@@ -77,40 +79,40 @@ export default function Index({ datos, filters }: IndexProps) {
   }
 
 
-  const handleClick = async () => {
-    if (loading) return;
-    setLoading(true);
+  // const handleClick = async () => {
+  //   if (loading) return;
+  //   setLoading(true);
 
-    try {
-      const resp = await fetch("/facturar", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRF-TOKEN": (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? "",
-        },
-        credentials: "same-origin",
-        body: JSON.stringify({
-          filtros: {
-            rango_fecha: { desde: "2025-10-01", hasta: "2025-10-31" },
-            tipo: "masiva",
-          },
-        }),
-      });
+  //   try {
+  //     const resp = await fetch("facturacion/facturar", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         "X-CSRF-TOKEN": (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? "",
+  //       },
+  //       credentials: "same-origin",
+  //       body: JSON.stringify({
+  //         filtros: {
+  //           rango_fecha: { desde: "2025-10-01", hasta: "2025-10-31" },
+  //           tipo: "masiva",
+  //         },
+  //       }),
+  //     });
 
-      if (!resp.ok) throw new Error(`Error en servidor: ${resp.status}`);
+  //     if (!resp.ok) throw new Error(`Error en servidor: ${resp.status}`);
 
-      const data = await resp.json();
-      console.log("Respuesta:", data);
+  //     const data = await resp.json();
+  //     console.log("Respuesta:", data);
 
-      setTaskId(data.task_id || null);
-      alert(data.message || "Facturación masiva iniciada.");
-    } catch (e) {
-      console.error("Error en handleClick:", e);
-      alert("Error iniciando la facturación masiva. ");
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     setTaskId(data.task_id || null);
+  //     alert(data.message || "Facturación masiva iniciada.");
+  //   } catch (e) {
+  //     console.error("Error en handleClick:", e);
+  //     alert("Error iniciando la facturación masiva. ");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
 
   return (
@@ -150,20 +152,24 @@ export default function Index({ datos, filters }: IndexProps) {
                 Facturar
               </Button>
             )}
-            {can('facturacion.create') && (
-              <Button
-                type="button"
-                className="bg-black text-white hover:bg-gray-900 cursor-pointer transition"
-                onClick={handleClick}
-                disabled={loading}
-              >
-                <PlusIcon className="w-4 h-4 mr-2" />
-                {loading ? "Iniciando..." : "Generar facturación masiva"}
-              </Button>
+  {can('facturacion.create') && (
+            datos.data.length > 0 ? ( 
+        
+        <FacturaPdfMasiva cicloId={datos.data[0]?.ciclo_id}/>
 
-            )}
+      ) : (
 
-            {taskId && <div>ID de tarea: {taskId} — revisa el estado en la sección de tareas.</div>}
+        <Link
+          as="button"
+          href="/facturacion/facturar"
+          className="bg-black text-white hover:bg-gray-900 cursor-pointer transition px-4 py-2 flex items-center"
+        >
+          <PlusIcon className="w-4 h-4 mr-2" />
+          {loading ? "Iniciando..." : "Generar facturación masiva"}
+        </Link>
+
+      ))}
+
           </div>
         </div>
         <Card>
@@ -272,7 +278,7 @@ export default function Index({ datos, filters }: IndexProps) {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              {can('faturacion.show') && (
+                              {can('facturacion.show') && (
                                 <DropdownMenuItem asChild>
                                   <Link
                                     href={`/facturacion/${dato.id}`}
@@ -281,6 +287,12 @@ export default function Index({ datos, filters }: IndexProps) {
                                     <EyeIcon className="h-4 w-4 mr-2" />
                                     Ver Detalles
                                   </Link>
+                                </DropdownMenuItem>
+                              )}
+                              {can('facturacion.show') && (
+                                <DropdownMenuItem >
+                                  <FacturaPdf
+                                    predioId={dato.predio.id} />
                                 </DropdownMenuItem>
                               )}
 

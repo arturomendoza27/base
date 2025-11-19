@@ -29,7 +29,11 @@ interface IndexProps {
 
 
 export default function Index({ datos, filters }: IndexProps) {
-  const [tarifa, setTarifa] = useState(datos.data);
+  const [ciclo, setCiclo] = useState(datos.data);
+  const [cierreDialogOpen, setCierreDialogOpen] = useState(false);
+  const [id, setId] = useState<number | null>(null)
+
+
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [idToDelete, setIdToDelete] = useState<number | null>(null)
   // Filter users based on search term
@@ -46,10 +50,23 @@ export default function Index({ datos, filters }: IndexProps) {
       preserveScroll: true,
     });
   }
+
+  {/* Handle Cierre */ }
+  const handleCierreConfirm = () => {
+    if (id) {
+      setCiclo(ciclo.filter((t) => t.id !== id))
+      router.put(`/ciclos/${id}`, {
+        preserveScroll: true,
+      });
+      setId(null)
+      setCierreDialogOpen(false)
+    }
+  }
+
   {/* Handle Delete */ }
   const handleDeleteConfirm = () => {
     if (idToDelete) {
-      setTarifa(tarifa.filter((t) => t.id !== idToDelete))
+      setCiclo(ciclo.filter((t) => t.id !== idToDelete))
       router.delete(`/ciclos/${idToDelete}`, {
         preserveScroll: true,
       });
@@ -60,25 +77,13 @@ export default function Index({ datos, filters }: IndexProps) {
 
   return (
     <DashboardLayout>
-      
+
       <div className="space-y-6">
-        
+
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-balance">Gestión de los Ciclos de Facturación</h1>
             <p className="text-muted-foreground">Administra los cilos de facturación</p>
-          </div>
-          <div className="flex space-x-2">
-            {can('tarifas.create') && (
-              <Button
-                type="button"
-                className="bg-black text-white hover:bg-gray-900 cursor-pointer transition"
-                onClick={() => (window.location.href = '/ciclos/create')}
-              >
-                <PlusIcon className="w-4 h-4 mr-2" />
-                Nueva Tarifa
-              </Button>
-            )}
           </div>
         </div>
         <Card>
@@ -90,7 +95,7 @@ export default function Index({ datos, filters }: IndexProps) {
                 <Input
                   type='text'
                   name='search'
-                  placeholder="Buscar tarifas..."
+                  placeholder="Buscar Ciclos..."
                   onChange={handleSearchChange}
                   value={data.search}
                   className="pl-10"
@@ -119,12 +124,12 @@ export default function Index({ datos, filters }: IndexProps) {
                             <div className="font-medium">{dato.anio}</div>
                           </div>
                         </TableCell>
-                            <TableCell>
+                        <TableCell>
                           <div>
                             <div className="text-sm text-muted-foreground">{dato.mes}</div>
                           </div>
                         </TableCell>
-                    
+
                         <TableCell>
                           {dato.estado === "abierto" ? (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -144,7 +149,7 @@ export default function Index({ datos, filters }: IndexProps) {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              {can('tarifas.show') && (
+                              {can('cicloFacturacion.show') && (
                                 <DropdownMenuItem asChild>
                                   <Link
                                     href={`/ciclos/${dato.id}`}
@@ -156,19 +161,22 @@ export default function Index({ datos, filters }: IndexProps) {
                                 </DropdownMenuItem>
                               )}
 
-                              {can('tarifas.edit') && (
+                              {can('cicloFacturacion.edit') && (
                                 <DropdownMenuItem asChild>
-                                  <Link
-                                    href={`/tarifas/${dato.id}/edit`}
-                                    className="flex items-center"
+                                  <button
+                                    onClick={() => {
+                                      setId(dato.id)
+                                      setCierreDialogOpen(true)
+                                    }}
+                                    className="group flex w-full items-center text-red-600 transition-colors duration-200 hover:text-red-700 focus:outline-none"
                                   >
-                                    <EditIcon className="h-4 w-4 mr-2" />
-                                    Editar
-                                  </Link>
+                                    <TrashIcon className="h-4 w-4 mr-2 transition-colors duration-200 group-hover:text-red-700" />
+                                    Cerrar
+                                  </button>
                                 </DropdownMenuItem>
                               )}
 
-                              {can('tarifas.delete') && (
+                              {can('cicloFacturacion.delete') && (
                                 <DropdownMenuItem asChild>
                                   <button
                                     onClick={() => {
@@ -214,7 +222,6 @@ export default function Index({ datos, filters }: IndexProps) {
           </CardContent>
         </Card>
       </div>
-
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
@@ -227,6 +234,22 @@ export default function Index({ datos, filters }: IndexProps) {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteConfirm}>Eliminar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Cierre Cliclo Confirmation Dialog */}
+      <AlertDialog open={cierreDialogOpen} onOpenChange={setCierreDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Una vez cerrado el ciclo no se pueden recibir mas pagos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleCierreConfirm}>Cerrar Ciclo</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

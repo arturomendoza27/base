@@ -1,16 +1,17 @@
 import { Button } from '@/components/ui/button';
 import { DashboardLayout } from '../dashboard/dashboard-layout';
-import { Cliente, Tarifa, type BreadcrumbItem, type User } from '@/types';
+import { CicloFacturacion, Cliente, MetricasCiclos, Tarifa, type BreadcrumbItem, type User } from '@/types';
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeftIcon } from 'lucide-react';
+import { AlertCircleIcon, ArrowLeftIcon, CheckCircle2Icon, ClockIcon, DollarSignIcon, ListStartIcon } from 'lucide-react';
 import clientes from '../../routes/clientes/index';
-import { TarifasDistributionChart } from '../dashboard/tarifas-distribution-chart';
 import { formatoPesos } from '@/lib/fomato_numeros';
+import CardMetricas from './Card/CardMetricas';
+
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Tarifas',
-        href: '/tarifas',
+        title: 'Ciclo',
+        href: '/ciclos',
     },
     {
         title: 'Show',
@@ -19,104 +20,40 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 interface ShowProps {
-    datos: Tarifa;
+    datos: MetricasCiclos;
 
 }
 
 export default function Show({ datos }: ShowProps) {
+    console.log(datos)
     return (
         <DashboardLayout>
-            <Head title={`Tarifa: ${datos.nombre}`} />
+            {/* <Head title={`Ciclo: ${datos.nombre}`} /> */}
             <div className="space-y-6">
                 <div className="flex items-center gap-4">
-                    <Link href="/tarifas">
+                    <Link href="/ciclos">
                         <Button variant="ghost" size="icon">
                             <ArrowLeftIcon className="h-5 w-5" />
                         </Button>
                     </Link>
                     <div>
-                        <h1 className="text-3xl font-bold text-balance">Tarifa</h1>
-                        <p className="text-muted-foreground">Informacion detallada la Tarifa</p>
+                        <h1 className="text-3xl font-bold text-balance">Ciclo {datos.ciclo}</h1>
+                        <p className="text-muted-foreground">Informacion detallada</p>
                     </div>
                 </div>
 
-                <div className="p-6 max-w-4xl mx-auto">
 
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    {/* Facturas Pagas */}
 
-                    <div className="bg-white shadow-md rounded-xl p-8 space-y-6">
-                        <div className="border-b pb-4">
-                            <h1 className="text-2xl font-bold text-gray-900"> {datos.nombre}</h1>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    ID
-                                </label>
-                                <p className="text-gray-900">{datos.id}</p>
-                            </div> */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Valor Tarifa
-                                </label>
-                                <p className="text-gray-900">{formatoPesos(datos.valor)}</p>
-                            </div>
-                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Valor Conexión (punto)
-                                </label>
-                                <p className="text-gray-900">{formatoPesos(datos.valor_conexion)}</p>
-                            </div>
-                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Valor Reconexión
-                                </label>
-                                <p className="text-gray-900">{formatoPesos(datos.valor_reconexion)}</p>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Estado
-                                </label>
-                                <p className="text-gray-900">
-                                    {datos.estado === "activa" ? (
-                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            Activa
-                                        </span>
-                                    ) : (
-                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                            Incativa
-                                        </span>
-                                    )}
-                                </p>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Created At
-                                </label>
-                                <p className="text-gray-900">
-                                    {new Date(datos.created_at).toLocaleDateString('es', {
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric',
-                                    })}
-                                </p>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Updated At
-                                </label>
-                                <p className="text-gray-900">
-                                    {new Date(datos.updated_at).toLocaleDateString('es', {
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric',
-                                    })}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+                    <CardMetricas title="Pagos realizados" color="green" count={datos.numero_pagadas} amount={datos.valor_pagadas} Icon={DollarSignIcon} />
+                    <CardMetricas title="Abonos realizados" color="blue" count={datos.numero_abonadas} amount={datos.valor_abonadas} Icon={CheckCircle2Icon} />
+                    <CardMetricas title="Facturas Vencidas" color="yellow" count={datos.numero_vencidas} amount={datos.valor_vencidas} Icon={ClockIcon} />
+                    <CardMetricas title="Suspendidos" color="red" count={datos.numero_suspendidas} amount={datos.valor_suspendidas} Icon={AlertCircleIcon} />
                 </div>
+
+
+
             </div>
         </DashboardLayout>
     );

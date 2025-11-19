@@ -6,7 +6,7 @@ Route::middleware('auth')->group(function () {
     Route::redirect('ciclos', '/ciclos/index');
 
     Route::resource('ciclos', CiclosController::class)
-        ->only(['create', 'store'])
+        ->only(['create', 'store']) 
         ->middleware('permission:facturacion.create');
 
     Route::resource('ciclos', CiclosController::class)

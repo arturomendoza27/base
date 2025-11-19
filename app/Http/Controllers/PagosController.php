@@ -17,8 +17,7 @@ class PagosController extends Controller
     public function index(Request $request)
     {
         $ciclo = CiclosFacturacion::with('facturas.predio.cliente')
-            ->orderByDesc('anio')
-            ->orderByDesc('mes')
+            ->latest('created_at')
             ->first();
 
         $data = Facturacion::conCicloAbierto()->with('predio.cliente', 'predio.categoria', 'ciclo')
@@ -47,8 +46,7 @@ class PagosController extends Controller
 
         //eviar los datos de facturacion 
         $ciclo = CiclosFacturacion::with('facturas.predio.cliente')
-            ->orderByDesc('anio')
-            ->orderByDesc('mes')
+            ->latest('created_at')
             ->first();
 
         $data = Facturacion::with('predio.cliente', 'ciclo')
@@ -93,7 +91,7 @@ class PagosController extends Controller
         $validated = $request->validate([
             'factura_id' => 'required|integer|unique:pagos,factura_id',
             'valor_pagado' => 'required|integer',
-            'medio_pago' => 'nullable|string|max:255|',
+            'medio_pago' => 'required|string|max:255|',
             'recibo_banco' => 'nullable|string|string|max:50',
             'recibo_numero' => 'nullable|string|max:50',
             'recibo_fecha' => 'nullable|date',
@@ -109,7 +107,7 @@ class PagosController extends Controller
                 'factura_id' => $validated['factura_id'],
                 'valor_pagado' => $validated['valor_pagado'],
                 'saldo_restante' => $saldo,
-                'medio_pago' => $validated['medio_pago'] ?? null,
+                'medio_pago' => $validated['medio_pago'],
                 'recibo_banco' => $validated['recibo_banco'] ?? null,
                 'recibo_numero' => $validated['recibo_numero'] ?? null,
                 'recibo_fecha' => $validated['recibo_fecha'] ?? null,

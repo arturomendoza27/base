@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { CheckCircle2, Receipt, Printer, Banknote, CreditCard, DollarSign } from "lucide-react";
+import { CheckCircle2, Receipt, Printer, Banknote, CreditCard, DollarSign, ShrinkIcon, Maximize2Icon, Minimize2Icon } from "lucide-react";
 import { DashboardLayout } from "../dashboard/dashboard-layout";
 import { Factura, Filters, PaginatedData } from "@/types";
 import { numberToWords } from "@/lib/number-to-words";
@@ -15,20 +15,50 @@ import { formatoPesos } from '@/lib/fomato_numeros';
 import { useForm } from "@inertiajs/react";
 
 interface IndexProps {
-  datos: PaginatedData<Factura>;
-  filters: Filters;
+  datos?: PaginatedData<Factura>;
+  filters?: Filters;
+  isFullscreen: boolean;
+  setIsFullscreen: (isFull: boolean) => void;
 }
 
-export default function CajaPage({ datos = {}, filters = {} }: IndexProps) {
+export default function CajaPage({ datos = {
+  data: [],
+  links: [],
+  current_page: 0,
+  first_page_url: "",
+  from: 0,
+  last_page: 0,
+  last_page_url: "",
+  next_page_url: null,
+  path: "",
+  per_page: 0,
+  prev_page_url: null,
+  to: 0,
+  total: 0
+}, filters = {} }: IndexProps) {
+  //fullscreen
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleFSChange = () => {
+      if (!document.fullscreenElement) {
+        setIsFullscreen(false);
+      }
+    };
+    document.addEventListener("fullscreenchange", handleFSChange);
+    return () => document.removeEventListener("fullscreenchange", handleFSChange);
+  }, []);
+
   // Estados generales
   const [searchTerm, setSearchTerm] = useState(filters.search || "");
+  const [allFacturas, setAllFacturas] = useState<Factura[]>([]);
   const [filteredFacturas, setFilteredFacturas] = useState<Factura[]>([]);
   const [selectedInvoice, setSelectedInvoice] = useState<Factura | null>(null);
   const [showList, setShowList] = useState(false);
   const { flash } = usePage().props as unknown as { flash?: { success?: string } };
   const [paymentCompleted, setPaymentCompleted] = useState(false);
   const [paymentData, setPaymentData] = useState<any>(null);
-  const [paymentMethod, setPaymentMethod] = useState<"cash" | "transfer">("cash");
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "transfer" | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const { data, setData, post, processing, errors, reset } = useForm({
@@ -39,6 +69,15 @@ export default function CajaPage({ datos = {}, filters = {} }: IndexProps) {
     recibo_numero: '',
     recibo_fecha: ''
   });
+
+
+  useEffect(() => {
+    // Solo setea si vienen datos nuevos
+    if (datos?.data?.length > 0) {
+      setAllFacturas(datos.data);
+    }
+  }, [datos]);
+
 
   // Cerrar lista si se hace clic fuera
   useEffect(() => {
@@ -73,7 +112,7 @@ export default function CajaPage({ datos = {}, filters = {} }: IndexProps) {
     }
 
     // Filtra localmente las facturas recibidas desde Laravel
-    const filtered = datos.data.filter((inv) => {
+    const filtered = allFacturas.filter((inv) => {
       const nombre = inv.predio?.cliente?.nombre?.toLowerCase() || "";
       const id = inv.id.toString().toLowerCase();
       const term = value.toLowerCase();
@@ -94,13 +133,28 @@ export default function CajaPage({ datos = {}, filters = {} }: IndexProps) {
   const change = selectedInvoice?.total_factura ? receivedAmountNum - selectedInvoice.total_factura : 0;
 
   const handleNewPayment = () => {
+    // Quitar estado de pago
     setPaymentCompleted(false);
-    data.valor_pagado = "";
-    data.recibo_banco = "";
-    data.recibo_numero = "";
-    data.recibo_fecha = "";
+
+    // Limpiar datos de pago
+    reset();
+    setPaymentData(null);
+
+    // Resetear método de pago a efectivo (o al que uses por defecto)
+    setPaymentMethod(null);
+
+    // Limpiar factura seleccionada
     setSelectedInvoice(null);
+
+    // Limpiar buscador
     setSearchTerm("");
+
+    // Limpiar lista filtrada
+    setFilteredFacturas([]);
+
+    // Ocultar lista desplegable
+    setShowList(false);
+
   };
 
   const handlePrint = () => {
@@ -170,15 +224,31 @@ export default function CajaPage({ datos = {}, filters = {} }: IndexProps) {
       ? "abono"
       : selectedInvoice?.estado ?? "pendiente";
   return (
-    <DashboardLayout>
-      <div className="space-y-6 " >
-        <div>
-          <h1 className="text-3xl font-bold text-balance">Caja - Punto de Pago</h1>
-          <p className="text-muted-foreground">Registro pagos de facturas</p>
+    <DashboardLayout fullscreen={isFullscreen}>
+      <div
+        className={
+          isFullscreen
+            ? "fixed inset-0 z-50 bg-white overflow-auto p-6"
+            : "space-y-6"
+        }
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-balance">Caja - Punto de Pago</h1>
+            <p className="text-muted-foreground">Registro pagos de facturas</p>
+          </div>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              className="p-2 rounded-md bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground transition"
+            >
+              {isFullscreen ? <Minimize2Icon className="h-5 w-5" /> : <Maximize2Icon className="h-5 w-5" />}
+            </button>
+          </div>
         </div>
         <div className="grid gap-6 lg:grid-cols-2" >
           {/* ==================== PANEL BUSCADOR ==================== */}
-          <Card>
+          <Card >
             <CardHeader>
               <CardTitle>Buscar Factura</CardTitle>
               <CardDescription>
@@ -189,6 +259,7 @@ export default function CajaPage({ datos = {}, filters = {} }: IndexProps) {
               <div ref={containerRef} className="relative flex gap-2">
                 <div className="flex-1">
                   <Input
+                    key={paymentCompleted ? "blocked" : "active"}
                     placeholder="Número de factura o nombre..."
                     value={searchTerm}
                     onChange={(e) => onInputChange(e.target.value)}
@@ -372,10 +443,10 @@ export default function CajaPage({ datos = {}, filters = {} }: IndexProps) {
                       <span className="font-medium">{formatoPesos(paymentData?.valor_pagado)}</span>
                     </div>
                     <div className="flex justify-between">
-                       {paymentData?.saldo_restante >= 0 
-                    ? <span>Saldo Pendiente:</span>
-                    :<span>Saldo a favor Cliente:</span>}
-                      
+                      {paymentData?.saldo_restante >= 0
+                        ? <span>Saldo Pendiente:</span>
+                        : <span>Saldo a favor Cliente:</span>}
+
                       <span className={` ${paymentData?.saldo_restante < 0 ? "font-medium" : "font-medium"}`}>  ${Math.abs(paymentData?.saldo_restante).toLocaleString("es-CO")}</span>
                     </div>
                     <div className="flex justify-between">
@@ -407,7 +478,7 @@ export default function CajaPage({ datos = {}, filters = {} }: IndexProps) {
                       Imprimir Recibo
                     </Button>
                     <Button
-                      onClick={() => (window.location.href = '/caja')}
+                      onClick={handleNewPayment}
                       // onClick={handleNewPayment}
                       className="flex items-center justify-center px-4 py-1 text-sm font-medium bg-indigo-500 text-white hover:bg-indigo-600 rounded-md"
                     >
@@ -526,7 +597,7 @@ export default function CajaPage({ datos = {}, filters = {} }: IndexProps) {
                           </div>
                         </div>
                       </>
-                    ) : (
+                    ) : paymentMethod === "transfer" ? (
                       <>
                         <div className="space-y-4">
                           <div className="space-y-2">
@@ -621,6 +692,13 @@ export default function CajaPage({ datos = {}, filters = {} }: IndexProps) {
                           </div>
                         </div>
                       </>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Seleccione metodo de pago</span>
+                        </div>
+                      </div>
+
                     )}
                     {errors.factura_id && (
                       <div className="text-red-600 text-sm mt-1">{errors.factura_id}</div>

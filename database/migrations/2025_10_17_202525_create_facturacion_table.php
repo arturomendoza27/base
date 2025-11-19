@@ -36,7 +36,7 @@ return new class extends Migration
             $table->boolean('generada_automaticamente')->default(true);
 
             // Auditoría
-            $table->timestamp('fecha_pago')->nullable();
+            // $table->timestamp('fecha_pago')->nullable();
             $table->text('observaciones')->nullable();
 
             $table->timestamps();
