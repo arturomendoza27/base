@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class Pagos extends Model
 {
+    use HasFactory, LogsActivity;
     protected $table = 'pagos';
     protected $fillable = [
         'factura_id',
@@ -15,11 +19,11 @@ class Pagos extends Model
         'valor_pagado',
         'saldo_restante',
         'medio_pago',
-         'recibo_banco',
+        'recibo_banco',
         'recibo_numero',
         'recibo_fecha',
-       // 'observaciones',//pendiente implementar
-       // 'registrado_por',//pendiente implementar
+        // 'observaciones',//pendiente implementar
+        // 'registrado_por',//pendiente implementar
     ];
 
     /**
@@ -54,5 +58,21 @@ class Pagos extends Model
             number_format($this->monto_pagado, 2),
             $this->fecha_pago->format('Y-m-d')
         );
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([
+                'factura_id',
+                'fecha_pago',
+                'valor_pagado',
+                'saldo_restante',
+                'medio_pago',
+                'recibo_banco',
+                'recibo_numero',
+                'recibo_fecha',
+            ]);
+        // Chain fluent methods for configuration options
     }
 }

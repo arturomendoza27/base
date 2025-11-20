@@ -13,6 +13,7 @@ import { Factura, Filters, PaginatedData } from "@/types";
 import { numberToWords } from "@/lib/number-to-words";
 import { formatoPesos } from '@/lib/fomato_numeros';
 import { useForm } from "@inertiajs/react";
+import AutoFocusedInput from "./autofocus";
 
 interface IndexProps {
   datos?: PaginatedData<Factura>;
@@ -43,11 +44,17 @@ export default function CajaPage({ datos = {
     const handleFSChange = () => {
       if (!document.fullscreenElement) {
         setIsFullscreen(false);
+        
       }
     };
     document.addEventListener("fullscreenchange", handleFSChange);
     return () => document.removeEventListener("fullscreenchange", handleFSChange);
   }, []);
+useEffect(() => {
+  setTimeout(() => {
+    inputRef.current?.focus();
+  }, 50);
+}, [isFullscreen]);
 
   // Estados generales
   const [searchTerm, setSearchTerm] = useState(filters.search || "");
@@ -155,6 +162,10 @@ export default function CajaPage({ datos = {
     // Ocultar lista desplegable
     setShowList(false);
 
+     setTimeout(() => {
+    inputRef.current?.focus();
+  }, 50);
+
   };
 
   const handlePrint = () => {
@@ -223,6 +234,18 @@ export default function CajaPage({ datos = {
     : paymentData?.saldo_restante && paymentData.saldo_restante < 0
       ? "abono"
       : selectedInvoice?.estado ?? "pendiente";
+
+
+const inputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+
+
+
   return (
     <DashboardLayout fullscreen={isFullscreen}>
       <div
@@ -264,7 +287,35 @@ export default function CajaPage({ datos = {
                     value={searchTerm}
                     onChange={(e) => onInputChange(e.target.value)}
                     disabled={paymentCompleted}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+
+                        const term = searchTerm.trim();
+
+                        // 1. Buscar coincidencia EXACTA por ID
+                        const exactFactura = allFacturas.find(
+                          (f) => f.id.toString() === term
+                        );
+
+                        if (exactFactura) {
+                          handleSelectFactura(exactFactura);
+                          setShowList(false);
+                          return;
+                        }
+
+                        // 2. Si no hay coincidencia exacta, seleccionar el primero
+                        if (filteredFacturas.length > 0) {
+                          handleSelectFactura(filteredFacturas[0]);
+                        }
+
+                        setShowList(false);
+                      }
+                    }}
+                    ref={inputRef}
+
                   />
+
                   {/* Lista desplegable */}
                   {showList && filteredFacturas.length > 0 && (
                     <ul className="absolute z-10 bg-white border border-gray-200 rounded-md shadow-md mt-1 w-full">

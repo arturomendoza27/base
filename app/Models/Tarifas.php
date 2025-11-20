@@ -5,10 +5,12 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class Tarifas extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
     protected $fillable = [
         'nombre',
         'valor',
@@ -19,6 +21,8 @@ class Tarifas extends Model
         'vigente_hasta',
         'categoria_id',
     ];
+
+     
 
     // Una tarifa pertenece a una categoría
     public function categoria()
@@ -80,5 +84,11 @@ class Tarifas extends Model
     //     return '$' . number_format($this->valor, 2);
     // }
 
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+        ->logOnly(['nombre', 'valor','valor_conexion', 'valor_reconexion','estado','vigente_desde','vigente_hasta','categoria_id',]);
+        // Chain fluent methods for configuration options
+    }
 
 }

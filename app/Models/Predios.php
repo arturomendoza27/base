@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class Predios extends Model
 {
- use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $fillable = [
         'cliente_id',
@@ -18,7 +20,7 @@ class Predios extends Model
         'estado_servicio',
         'fecha_conexion',
         'fecha_suspension',
-        'fecha_reconexion', 
+        'fecha_reconexion',
         'categoria_id',
     ];
 
@@ -33,7 +35,7 @@ class Predios extends Model
         return $this->belongsTo(Barrios::class, 'barrio_id');
     }
 
-      // Un predio pertenece a una categoría
+    // Un predio pertenece a una categoría
     public function categoria()
     {
         return $this->belongsTo(CategoriasPredios::class, 'categoria_id');
@@ -45,13 +47,28 @@ class Predios extends Model
         return $this->hasMany(Facturacion::class, 'predio_id');
     }
 
-     public function ultimaFactura()
+    public function ultimaFactura()
     {
-       return $this->facturas()
-                    ->orderByDesc('id') 
-                    ->first();
+        return $this->facturas()
+            ->orderByDesc('id')
+            ->first();
     }
 
-
-    
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([
+                'cliente_id',
+                'matricula_predial',
+                'direccion_predio',
+                'barrio_id',
+                'ruta',
+                'estado_servicio',
+                'fecha_conexion',
+                'fecha_suspension',
+                'fecha_reconexion',
+                'categoria_id'
+            ]);
+        // Chain fluent methods for configuration options
+    }
 }

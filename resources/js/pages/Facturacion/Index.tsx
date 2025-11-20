@@ -278,7 +278,7 @@ export default function Index({ datos, filters }: IndexProps) {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              {can('facturacion.show') && (
+                              {/* {can('facturacion.show') && (
                                 <DropdownMenuItem asChild>
                                   <Link
                                     href={`/facturacion/${dato.id}`}
@@ -288,7 +288,7 @@ export default function Index({ datos, filters }: IndexProps) {
                                     Ver Detalles
                                   </Link>
                                 </DropdownMenuItem>
-                              )}
+                              )} */}
                               {can('facturacion.show') && (
                                 <DropdownMenuItem >
                                   <FacturaPdf

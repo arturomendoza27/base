@@ -23,6 +23,7 @@ import {
 import { cn } from "@/lib/utils"
 import { can } from '@/lib/can';
 import flasher from '@flasher/flasher'
+import { permission } from "process";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: HomeIcon },
@@ -33,6 +34,7 @@ const navigation = [
   { name: "Predios", href: "/predios", icon: Building2Icon, permission: "predios.view" },
   { name: "Ciclos", href: "/ciclos", icon: FileTextIcon, permission: "cicloFacturacion.view" },
   { name: "Facturación", href: "/facturacion", icon: FileTextIcon, permission: "facturacion.view" },
+  { name: "Logs", href: "/log", icon: BarChart3Icon, permission: "log.view"},
   { name: "Caja", href: "/caja", icon: WalletIcon, permission: "caja.view" },
   { name: "Pagos", href: "/pagos", icon: CreditCardIcon, permission: "pagos.view" },
   { name: "Reportes", href: "/reportes", icon: BarChart3Icon, permission: "reportes.view" },

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Auth;
 use App\Models\CiclosFacturacion;
 use App\Models\Clientes;
 use App\Models\Facturacion;
@@ -104,10 +105,11 @@ class FacturacionController extends Controller
     }
     public function Masiva(Request $request)
     {
-
+        
         DB::beginTransaction();
 
         try {
+            
             $fechaActual = Carbon::now();
             $fechaAnterior = Carbon::now()->subMonth();
             $mes = $fechaAnterior->translatedFormat('F');
@@ -141,11 +143,12 @@ class FacturacionController extends Controller
                 'fecha_inicio' => Carbon::now()->startOfMonth(),
                 'fecha_fin' => Carbon::now()->endOfMonth(),
             ]);
+            
 
             // === 4️⃣ Iniciar proceso de facturación ===
             $predios = Predios::with('categoria', 'cliente')->get();
             $contadorFacturas = 0;
-
+            activity()->disableLogging();
             foreach ($predios as $predio) {
                 // Buscar la tarifa vigente según la categoría del predio
                 $tarifa = Tarifas::where('categoria_id', $predio->categoria_id)
@@ -241,7 +244,19 @@ class FacturacionController extends Controller
 
                 $contadorFacturas++;
             }
+// Se vuelve a activar el logging automático
+            activity()->enableLogging();
 
+            // Registrar un solo log consolidado
+            activity('facturacion_masiva')
+                ->performedOn($nuevoCiclo)
+                ->causedBy(Auth::user())
+                ->withProperties([
+                    'total_facturas' => $contadorFacturas,
+                    'desde' => Carbon::now()->startOfMonth(),
+                    'hasta' => $fechaActual->copy()->addDays(15),
+                ])
+                ->log("Facturación masiva generada: {$contadorFacturas} facturas para el ciclo {$nuevoCiclo} {$nuevoCiclo->mes} {$nuevoCiclo->anio}");
             DB::commit();
 
 
@@ -257,7 +272,7 @@ class FacturacionController extends Controller
             DB::rollBack();
             return redirect()
                 ->route('facturacion.index')
-                ->with('success', "Error al generar la facturación");
+                ->with('error', "Error al generar la facturación".  $e);
             // return response()->json([
             //     'error' => 'Error al generar la facturación: ' . $e->getMessage()
             // ], 500);

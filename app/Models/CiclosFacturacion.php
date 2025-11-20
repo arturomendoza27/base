@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
-
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 class CiclosFacturacion extends Model
 {
-     use HasFactory;
+     use HasFactory, LogsActivity;
 
     protected $table = 'ciclos_facturacion';
 
@@ -78,5 +79,16 @@ class CiclosFacturacion extends Model
                     ->havingRaw("SUM(CASE WHEN estado = 'VENCIDA' THEN 1 ELSE 0 END) = 2");
             });
         });
+    }
+
+     public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+        ->logOnly( ['anio',
+        'mes',
+        'estado',
+        'fecha_inicio',
+        'fecha_fin']);
+        // Chain fluent methods for configuration options
     }
 }

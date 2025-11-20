@@ -72,6 +72,9 @@ class PermissionSeeder extends Seeder
             "reportes.delete",
             "reportes.import",
             "reportes.export",
+            "log.view",
+            'settings.view'
+             
 
         ];
 

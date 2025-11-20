@@ -60,4 +60,5 @@ require __DIR__ . '/predios.php';
 require __DIR__ . '/ciclos.php';
 require __DIR__ . '/facturacion.php';
 require __DIR__ . '/pagos.php';
+require __DIR__ . '/logs.php';
 

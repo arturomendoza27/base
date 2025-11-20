@@ -286,7 +286,7 @@ $response = [
      */
     public function destroy(string $id)
     {
-        $data = CiclosFacturacion::inactiva()->findOrFail($id);
+        $data = CiclosFacturacion::findOrFail($id);
 
         try {
             DB::beginTransaction();

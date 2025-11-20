@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class Facturacion extends Model
 {
-    use HasFactory;
+    use HasFactory,LogsActivity;
     protected $table = 'facturacion';
     protected $fillable = [
         'cliente_id',
@@ -59,5 +61,28 @@ class Facturacion extends Model
     public function pagos()
     {
         return $this->hasMany(Pagos::class, 'factura_id');
+    }
+
+
+    
+     public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+        ->logOnly(['cliente_id',
+        'predio_id',
+        'ciclo_id',
+        'numero',
+        'fecha_emision',
+        'fecha_vencimiento',
+        'concepto',
+        'saldo_anterior',
+        'saldo_actual',
+        'saldo_conexion',
+        'saldo_reconexion',
+        'total_factura',
+        'estado', 
+        'generada_automaticamente',
+        'observaciones']);
+        // Chain fluent methods for configuration options
     }
 }
