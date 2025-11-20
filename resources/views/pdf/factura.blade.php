@@ -18,6 +18,23 @@
             margin: 15px 0;
         }
 
+        .barcode {
+            top: 165px;
+            left: 5px;
+        }
+
+        .barcode-text {
+            position: absolute;
+            top: 260px;
+            /* mismo top del barcode */
+            left: 35px;
+            /* ajusta según distancia */
+            transform: rotate(270deg);
+            font-size: 13px;
+            font-weight: bold;
+            transform-origin: left top;
+        }
+
         .page-break {
             page-break-after: always;
         }
@@ -184,6 +201,13 @@
     @if ($factura)
 
     <div class="factura-wrapper">
+        <div class="campo barcode">
+            <img src="data:image/png;base64,{{$barcode}}" alt="{{$factura->id}}">
+           
+        </div>
+
+         <strong class="barcode-text">{{ $factura->id}}</strong>
+
 
         <div class="campo cliente">
             {{ $factura->predio->cliente->nombre?? 'SIN CLIENTE' }}

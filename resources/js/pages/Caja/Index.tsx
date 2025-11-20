@@ -13,7 +13,7 @@ import { Factura, Filters, PaginatedData } from "@/types";
 import { numberToWords } from "@/lib/number-to-words";
 import { formatoPesos } from '@/lib/fomato_numeros';
 import { useForm } from "@inertiajs/react";
-import AutoFocusedInput from "./autofocus";
+
 
 interface IndexProps {
   datos?: PaginatedData<Factura>;

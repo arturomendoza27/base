@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
 use App\Models\CiclosFacturacion;
-use App\Models\Clientes;
+use Picqer\Barcode\BarcodeGeneratorPNG;
 use App\Models\Facturacion;
 use App\Models\Pagos;
 use App\Models\Predios;
@@ -105,11 +105,11 @@ class FacturacionController extends Controller
     }
     public function Masiva(Request $request)
     {
-        
+
         DB::beginTransaction();
 
         try {
-            
+
             $fechaActual = Carbon::now();
             $fechaAnterior = Carbon::now()->subMonth();
             $mes = $fechaAnterior->translatedFormat('F');
@@ -143,7 +143,7 @@ class FacturacionController extends Controller
                 'fecha_inicio' => Carbon::now()->startOfMonth(),
                 'fecha_fin' => Carbon::now()->endOfMonth(),
             ]);
-            
+
 
             // === 4️⃣ Iniciar proceso de facturación ===
             $predios = Predios::with('categoria', 'cliente')->get();
@@ -244,7 +244,7 @@ class FacturacionController extends Controller
 
                 $contadorFacturas++;
             }
-// Se vuelve a activar el logging automático
+            // Se vuelve a activar el logging automático
             activity()->enableLogging();
 
             // Registrar un solo log consolidado
@@ -272,7 +272,7 @@ class FacturacionController extends Controller
             DB::rollBack();
             return redirect()
                 ->route('facturacion.index')
-                ->with('error', "Error al generar la facturación".  $e);
+                ->with('error', "Error al generar la facturación" .  $e);
             // return response()->json([
             //     'error' => 'Error al generar la facturación: ' . $e->getMessage()
             // ], 500);
@@ -328,6 +328,46 @@ class FacturacionController extends Controller
         //
     }
 
+    // private function generateBarcode($idFactura)
+    // {
+    //    $generator = new BarcodeGeneratorPNG();
+    // $barcodeData = $idFactura;
+
+    // // PNG image binary
+    // $barcodeImage = $generator->getBarcode($barcodeData, $generator::TYPE_CODE_128);
+
+    // // Convert to base64
+    // $barcodeBase64 = base64_encode($barcodeImage);
+
+    // return $barcodeBase64;
+    // }
+
+
+    private function generateBarcode($idFactura)
+    {
+        $generator = new BarcodeGeneratorPNG();
+        $barcodeData = $idFactura;
+
+        // 1. Generar barcode en PNG (binario)
+        $barcodeImage = $generator->getBarcode($barcodeData, $generator::TYPE_CODE_128);
+
+        // 2. Convertir a imagen GD
+        $image = imagecreatefromstring($barcodeImage);
+
+        // 3. Rotar 90 grados (sentido antihorario)
+        $rotated = imagerotate($image, 90, 0);
+
+        // 4. Convertir imagen rotada nuevamente a PNG
+        ob_start();
+        imagepng($rotated);
+        $rotatedPng = ob_get_clean();
+
+        // 5. Convertir a Base64
+        $barcodeBase64 = base64_encode($rotatedPng);
+
+        return $barcodeBase64;
+    }
+
     public function facturasPdf($id)
     {
         // Aumenta límites para seguridad
@@ -343,12 +383,21 @@ class FacturacionController extends Controller
             ->get();
 
 
-        // $factura = Facturacion::with('predio.cliente', 'ciclo')
-        //     ->where('ciclo_id', $id)
-        //     ->orderByDesc('ruta')
-        //     ->get();
+       // Generar barcode para cada factura
+$generator = new BarcodeGeneratorPNG();
+
+foreach ($facturas as $factura) {
+    // Cambia $factura->id por lo que quieras usar para el barcode
+    $codigo = $factura->id;
+
+    $factura->barcode = base64_encode(
+        $generator->getBarcode($codigo, $generator::TYPE_CODE_128)
+    );
+}
+
         $pdf = Pdf::loadView('pdf.facturacion', [
-            'facturas' => $facturas
+            'facturas' => $facturas,
+        
         ])->setPaper('letter', 'portrait');
 
         return $pdf->stream('facturacion_ciclo_' . $id . '.pdf');
@@ -358,6 +407,7 @@ class FacturacionController extends Controller
 
     public function facturasPdfCliente($id)
     {
+
         // Aumenta límites para seguridad
         ini_set('max_execution_time', 300);
         ini_set('memory_limit', '512M');
@@ -374,9 +424,10 @@ class FacturacionController extends Controller
         //     ->orderByDesc('ruta')
         //     ->get();
 
-
+        $barcode = $this->generateBarcode($factura->id);
         $pdf = Pdf::loadView('pdf.factura', [
-            'factura' => $factura
+            'factura' => $factura,
+            'barcode' => $barcode,
         ])->setPaper('letter', 'portrait');
 
         return $pdf->stream('facturacion_predio_' . $id . '.pdf');
