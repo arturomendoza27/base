@@ -10,10 +10,16 @@ Route::get('/', function () {
     return redirect()->route('login');
 })->name('home');
 
+use App\Http\Controllers\DashboardController;
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
+    
+    // API para métricas del dashboard
+    Route::get('api/dashboard/metrics', [DashboardController::class, 'index'])
+        ->name('dashboard.metrics');
 
     // Users routes with permissions
     Route::resource('users', UserController::class)
