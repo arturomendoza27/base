@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, usePage, router } from '@inertiajs/react';
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -19,6 +19,7 @@ import {
   Building2Icon,
   ContactRoundIcon,
   BookLockIcon,
+  LogOutIcon,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { can } from '@/lib/can';
@@ -38,7 +39,7 @@ const navigation = [
   { name: "Caja", href: "/caja", icon: WalletIcon, permission: "caja.view" },
   { name: "Pagos", href: "/pagos", icon: CreditCardIcon, permission: "pagos.view" },
   { name: "Reportes", href: "/reportes", icon: BarChart3Icon, permission: "reportes.view" },
-  { name: "Configuración", href: "/settings", icon: SettingsIcon, permission: "settings.view" },
+  { name: "Cerrar Sesión", href: "/logout", icon: LogOutIcon },
 
 ]
 interface DashboardLayoutProps {
@@ -54,42 +55,70 @@ export function DashboardLayout({ children, fullscreen = false }: DashboardLayou
     }
   }, [messages])
 
-  const Sidebar = ({ mobile = false }: { mobile?: boolean }) => (
-    <div className={cn("flex flex-col h-full", mobile ? "w-full" : "w-64")}>
-      <div className="flex items-center gap-2 px-6 py-4 border-b border-border">
-        <DropletIcon className="h-8 w-8 text-secondary" />
-        <div>
-          <h1 className="text-xl font-bold">Manantial</h1>
-          <p className="text-sm text-muted-foreground">Sistema de Facturación</p>
+  const Sidebar = ({ mobile = false }: { mobile?: boolean }) => {
+    const handleLogout = (e: React.MouseEvent) => {
+      e.preventDefault();
+      // Usar router.post de Inertia para enviar la solicitud POST
+      router.post('/logout');
+    };
+
+    return (
+      <div className={cn("flex flex-col h-full", mobile ? "w-full" : "w-64")}>
+        <div className="flex items-center gap-2 px-6 py-4 border-b border-border">
+          <DropletIcon className="h-8 w-8 text-secondary" />
+          <div>
+            <h1 className="text-xl font-bold">Manantial</h1>
+            <p className="text-sm text-muted-foreground">Sistema de Facturación</p>
+          </div>
         </div>
+
+        <nav className="flex-1 px-4 py-6 space-y-2">
+          {navigation.map((item) => {
+            if (item.permission && !can(item.permission)) return null // 🔒 ocultar si no tiene permiso
+
+            const isActive = location.pathname === item.href
+
+            // Manejo especial para el botón de logout
+            if (item.name === "Cerrar Sesión") {
+              return (
+                <button
+                  key={item.name}
+                  onClick={(e) => {
+                    handleLogout(e);
+                    if (mobile) setSidebarOpen(false);
+                  }}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors w-full text-left cursor-pointer",
+                    "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  )}
+                >
+                  <item.icon className="h-5 w-5" />
+                  {item.name}
+                </button>
+              );
+            }
+
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-secondary text-secondary-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                )}
+                onClick={() => mobile && setSidebarOpen(false)}
+              >
+                <item.icon className="h-5 w-5" />
+                {item.name}
+              </Link>
+            )
+          })}
+        </nav>
       </div>
-
-      <nav className="flex-1 px-4 py-6 space-y-2">
-        {navigation.map((item) => {
-          if (item.permission && !can(item.permission)) return null // 🔒 ocultar si no tiene permiso
-
-          const isActive = location.pathname === item.href
-
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                isActive
-                  ? "bg-secondary text-secondary-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
-              )}
-              onClick={() => mobile && setSidebarOpen(false)}
-            >
-              <item.icon className="h-5 w-5" />
-              {item.name}
-            </Link>
-          )
-        })}
-      </nav>
-    </div>
-  )
+    )
+  }
 
   return (
 

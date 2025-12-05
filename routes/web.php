@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return Inertia::render('welcome');
+    return redirect()->route('login');
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -62,4 +62,3 @@ require __DIR__ . '/facturacion.php';
 require __DIR__ . '/pagos.php';
 require __DIR__ . '/caja.php';
 require __DIR__ . '/logs.php';
-
