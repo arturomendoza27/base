@@ -32,21 +32,21 @@ export default function Index({ roles }: IndexProps) {
       <DashboardLayout>
          <Head title="Roles" />
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-3xl font-bold text-balance">Gestión de Roles y Permisos</h1>
-                  <p className="text-muted-foreground">Administra roles y permisos asignados a los usuarios</p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h1 className="text-3xl font-bold text-balance">Gestión de Roles y Permisos</h1>
+                    <p className="text-muted-foreground">Administra roles y permisos asignados a los usuarios</p>
+                  </div>
+                  {can('users.create') && (
+                    <Link
+                      href="/roles/create"
+                      className="inline-flex items-center bg-black text-white hover:bg-gray-900 px-4 py-2 rounded-md transition"
+                    >
+                      <PlusIcon className="w-4 h-4 mr-2" />
+                      Nuevo Rol
+                    </Link>
+                  )}
                 </div>
-                {can('users.create') && (
-                  <Link
-                    href="/roles/create"
-                    className="inline-block mb-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded px-4 py-2 transition"
-                  >
-                    <PlusIcon className="w-4 h-4 mr-2 inline" />
-                    Nuevo Rol
-                  </Link>
-                )}
-              </div>
       
               <Card>
                 <CardHeader className="flex items-center justify-between">
@@ -94,41 +94,43 @@ export default function Index({ roles }: IndexProps) {
                                                     {role.permissions.map((perm) => (
                                                         <span
                                                             key={perm.id}
-                                                            className="inline-block rounded bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700"
+                                                            className="inline-block rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 border border-gray-200"
                                                         >
                                                             {perm.name}
                                                         </span>
                                                     ))}
                                                 </div>
                                             ) : (
-                                                <span className="text-gray-400">No permissions</span>
+                                                <span className="text-gray-400">Sin permisos</span>
                                             )}
                                         </td>
                                         <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
-                                            {can('roles.view') && (
-                                                <Link
-                                                    href={`/roles/${role.id}`}
-                                                    className="my-0.5 mr-2 rounded bg-green-600 px-3 py-1 text-white hover:bg-green-700"
-                                                >
-                                                    Show
-                                                </Link>
-                                            )}
-                                            {can('roles.edit') && (
-                                                <Link
-                                                    href={`/roles/${role.id}/edit`}
-                                                    className="my-0.5 mr-2 rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700"
-                                                >
-                                                    Edit
-                                                </Link>
-                                            )}
-                                            {can('roles.delete') && (
-                                                <Link
-                                                    onClick={() => handleDelete(role.id)}
-                                                    className="rounded bg-red-600 px-3 py-1 text-white hover:bg-red-700"
-                                                >
-                                                    Delete
-                                                </Link>
-                                            )}
+                                            <div className="flex items-center gap-2">
+                                                {can('roles.view') && (
+                                                    <Link
+                                                        href={`/roles/${role.id}`}
+                                                        className="inline-flex items-center px-3 py-1 text-sm bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300 rounded-md transition"
+                                                    >
+                                                        Ver
+                                                    </Link>
+                                                )}
+                                                {can('roles.edit') && (
+                                                    <Link
+                                                        href={`/roles/${role.id}/edit`}
+                                                        className="inline-flex items-center px-3 py-1 text-sm bg-black text-white hover:bg-gray-900 rounded-md transition"
+                                                    >
+                                                        Editar
+                                                    </Link>
+                                                )}
+                                                {can('roles.delete') && (
+                                                    <button
+                                                        onClick={() => handleDelete(role.id)}
+                                                        className="inline-flex items-center px-3 py-1 text-sm bg-red-600 text-white hover:bg-red-700 rounded-md transition"
+                                                    >
+                                                        Eliminar
+                                                    </button>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -145,4 +147,3 @@ export default function Index({ roles }: IndexProps) {
       </DashboardLayout>
     );
 }
-

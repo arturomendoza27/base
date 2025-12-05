@@ -1,6 +1,12 @@
-import AppLayout from '@/layouts/app-layout';
+import { DashboardLayout } from '../dashboard/dashboard-layout';
 import { type BreadcrumbItem, type Role } from '@/types';
 import { Head, Link } from '@inertiajs/react';
+import { Button } from "@/components/ui/button"
+import { ArrowLeftIcon, EditIcon } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { can } from '@/lib/can';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -8,7 +14,7 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: '/roles',
     },
     {
-        title: 'Show',
+        title: 'Detalles del Rol',
         href: '#',
     },
 ];
@@ -20,101 +26,113 @@ interface ShowProps {
 
 export default function Show({ role, rolePermissions }: ShowProps) {
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`Role: ${role.name}`} />
-            <div className="p-6 max-w-4xl mx-auto">
-                <Link
-                    href="/roles"
-                    className="inline-block mb-6 bg-indigo-600 text-white hover:bg-indigo-700 rounded px-4 py-2 transition"
-                >
-                    Back to Roles
-                </Link>
-
-                <div className="bg-white shadow-md rounded-xl p-8 space-y-6">
-                    <div className="border-b pb-4">
-                        <h1 className="text-2xl font-bold text-gray-900">Role Details</h1>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <DashboardLayout>
+            <Head title={`Rol: ${role.name}`} />
+            <div className="space-y-6 max-w-4xl">
+                <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                        <Link href="/roles">
+                            <Button variant="ghost" size="icon">
+                                <ArrowLeftIcon className="h-5 w-5" />
+                            </Button>
+                        </Link>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                ID
-                            </label>
-                            <p className="text-gray-900">{role.id}</p>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Guard Name
-                            </label>
-                            <p className="text-gray-900">{role.guard_name}</p>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Name
-                            </label>
-                            <p className="text-gray-900 text-lg font-semibold">{role.name}</p>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Permissions Count
-                            </label>
-                            <p className="text-gray-900">
-                                {rolePermissions ? rolePermissions.length : 0} permission(s)
-                            </p>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Created At
-                            </label>
-                            <p className="text-gray-900">
-                                {new Date(role.created_at).toLocaleDateString('en-US', {
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric',
-                                })}
-                            </p>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Updated At
-                            </label>
-                            <p className="text-gray-900">
-                                {new Date(role.updated_at).toLocaleDateString('en-US', {
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric',
-                                })}
-                            </p>
+                            <h1 className="text-3xl font-bold text-balance">Detalles del Rol</h1>
+                            <p className="text-muted-foreground">Información detallada del rol: {role.name}</p>
                         </div>
                     </div>
+                    {can('roles.edit') && (
+                        <Link href={`/roles/${role.id}/edit`}>
+                            <Button className="flex items-center gap-2">
+                                <EditIcon className="h-4 w-4" />
+                                Editar Rol
+                            </Button>
+                        </Link>
+                    )}
+                </div>
+                
+                <div className="p-6 max-w-4xl mx-auto">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Información del Rol</CardTitle>
+                            <CardDescription>Detalles completos del rol en el sistema</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            {/* Información Básica */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <Label className="text-sm font-medium">ID</Label>
+                                    <p className="text-lg font-semibold">{role.id}</p>
+                                </div>
 
-                    <div className="border-t pt-6">
-                        <label className="block text-sm font-medium text-gray-700 mb-3">
-                            Permissions
-                        </label>
-                        {rolePermissions && rolePermissions.length > 0 ? (
-                            <div className="flex flex-wrap gap-2">
-                                {rolePermissions.map((permission, index) => (
-                                    <span
-                                        key={index}
-                                        className="inline-block rounded-lg bg-green-100 px-3 py-1 text-sm font-semibold text-green-700"
-                                    >
-                                        {permission}
-                                    </span>
-                                ))}
+                                <div className="space-y-2">
+                                    <Label className="text-sm font-medium">Nombre del Rol</Label>
+                                    <p className="text-lg font-semibold text-primary">{role.name}</p>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label className="text-sm font-medium">Guard Name</Label>
+                                    <p className="text-lg">{role.guard_name}</p>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label className="text-sm font-medium">Cantidad de Permisos</Label>
+                                    <p className="text-lg font-semibold">
+                                        {rolePermissions ? rolePermissions.length : 0} permiso(s)
+                                    </p>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label className="text-sm font-medium">Fecha de Creación</Label>
+                                    <p className="text-lg">
+                                        {new Date(role.created_at).toLocaleDateString('es-ES', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric',
+                                        })}
+                                    </p>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label className="text-sm font-medium">Última Actualización</Label>
+                                    <p className="text-lg">
+                                        {new Date(role.updated_at).toLocaleDateString('es-ES', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric',
+                                        })}
+                                    </p>
+                                </div>
                             </div>
-                        ) : (
-                            <p className="text-gray-400">No permissions assigned</p>
-                        )}
-                    </div>
+
+                            {/* Permisos Asignados */}
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <Label className="text-lg font-medium">Permisos Asignados</Label>
+                                    <Badge variant="outline">
+                                        {rolePermissions ? rolePermissions.length : 0} permisos
+                                    </Badge>
+                                </div>
+                                
+                                {rolePermissions && rolePermissions.length > 0 ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                        {rolePermissions.map((permission, index) => (
+                                            <div key={index} className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                                                <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                                                <span className="text-sm font-medium">{permission}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-8 border-2 border-dashed rounded-lg">
+                                        <p className="text-muted-foreground">No hay permisos asignados a este rol</p>
+                                    </div>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
-        </AppLayout>
+        </DashboardLayout>
     );
 }
-

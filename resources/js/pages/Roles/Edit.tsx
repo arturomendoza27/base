@@ -1,7 +1,13 @@
 import { Input } from '@/components/ui/input';
-import AppLayout from '@/layouts/app-layout';
+import { DashboardLayout } from '../dashboard/dashboard-layout';
 import { type BreadcrumbItem, type Role } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
+import { Button } from "@/components/ui/button"
+import { ArrowLeftIcon, SaveIcon, XIcon } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { router } from '@inertiajs/react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -9,7 +15,7 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: '/roles',
     },
     {
-        title: 'Edit',
+        title: 'Editar Rol',
         href: '#',
     },
 ];
@@ -36,73 +42,110 @@ export default function Edit({ role, rolePermissions, permissions }: EditProps) 
 
     function submit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
-        put(`/roles/${role.id}`, data);
+        put(`/roles/${role.id}`);
     }
 
+    const handleCancel = () => {
+        router.visit('/roles');
+    };
+
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Role create" />
-            <div className="p-6 max-w-lg mx-auto">
-                <Link
-                    href='/roles'
-                    className="inline-block mb-6 bg-indigo-600 text-white hover:bg-indigo-700 rounded px-4 py-2 transition"
-                >
-                    Back
-                </Link>
-                <form
-                    onSubmit={submit}
-                    className="bg-white shadow-md rounded-xl px-8 pt-6 pb-8 mb-4 space-y-6"
-                    aria-label="simple-form"
-                >
-                    {/* Name */}
+        <DashboardLayout>
+            <Head title="Editar Rol" />
+            <div className="space-y-6 max-w-4xl">
+                <div className="flex items-center gap-4">
+                    <Link href="/roles">
+                        <Button variant="ghost" size="icon">
+                            <ArrowLeftIcon className="h-5 w-5" />
+                        </Button>
+                    </Link>
                     <div>
-                        <label htmlFor="name" className="block text-gray-700 text-sm font-bold mb-2">
-                            Name
-                        </label>
-                        <Input
-                            id="name"
-                            value={data.name}
-                            onChange={e => setData('name', e.target.value)}
-                            type="text"
-                            placeholder="Enter name"
-                            className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                        />
-                        {errors.name && <div className="text-red-600 text-sm mt-1">{errors.name}</div>}
+                        <h1 className="text-3xl font-bold text-balance">Editar Rol: {role.name}</h1>
+                        <p className="text-muted-foreground">Actualice la información del rol</p>
                     </div>
-                    {/* Permissions */}
-                    <div>
-                        <label htmlFor="name" className="block text-gray-700 text-sm font-bold mb-2">
-                            Permissions
-                        </label>
-                        {permissions.map((permission) => 
-                        <div className="flex flex-col gap-3">
-                            <label key={permission} className="flex items-center gap-3 cursor-pointer bg-gray-50 hover:bg-gray-100 rounded px-3 py-2 transition">
-                                <input
-                                    type="checkbox"
-                                    value={permission}
-                                    onChange={e => handleCheckboxChange(permission, e.target.checked)}
-                                    checked={data.permissions.includes(permission)}
-                                    id={permission}
-                                    className="form-checkbox h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500"
-                                />
-                                <span className="text-gray-800 font-medium">{permission}</span>
-                            </label>
+                </div>
+                <div className="p-6 max-w-4xl mx-auto">
+                    <form onSubmit={submit}>
+                        <div className="space-y-6">
+                            {/* Información del Rol */}
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Información del Rol</CardTitle>
+                                    <CardDescription>Actualice los datos del rol</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    {/* Nombre del Rol */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="name">
+                                            Nombre del Rol <span className="text-destructive">*</span>
+                                        </Label>
+                                        <Input
+                                            id="name"
+                                            value={data.name}
+                                            onChange={e => setData('name', e.target.value)}
+                                            type="text"
+                                            placeholder="Ingrese el nombre del rol"
+                                        />
+                                        {errors.name && <div className="text-red-600 text-sm mt-1">{errors.name}</div>}
+                                    </div>
+
+                                    {/* Permisos */}
+                                    <div className="space-y-4">
+                                        <Label>
+                                            Permisos <span className="text-destructive">*</span>
+                                        </Label>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                            {permissions.map((permission) => (
+                                                <div key={permission} className="flex items-center space-x-2">
+                                                    <Checkbox
+                                                        id={permission}
+                                                        checked={data.permissions.includes(permission)}
+                                                        onCheckedChange={(checked) => 
+                                                            handleCheckboxChange(permission, checked === true)
+                                                        }
+                                                    />
+                                                    <Label
+                                                        htmlFor={permission}
+                                                        className="text-sm font-normal cursor-pointer"
+                                                    >
+                                                        {permission}
+                                                    </Label>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        {errors.permissions && <div className="text-red-600 text-sm mt-1">{errors.permissions}</div>}
+                                        <p className="text-sm text-muted-foreground">
+                                            Seleccionados: {data.permissions.length} de {permissions.length} permisos
+                                        </p>
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            {/* Botones de Acción */}
+                            <div className="flex items-center justify-end gap-4">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={handleCancel}
+                                    className="flex items-center justify-center px-4 py-2 h-10 text-sm font-medium rounded-md"
+                                >
+                                    <XIcon className="h-4 w-4 mr-2" />
+                                    Cancelar
+                                </Button>
+
+                                <Button
+                                    type="submit"
+                                    disabled={processing}
+                                    className="flex items-center justify-center px-4 py-2 h-10 text-sm font-medium bg-indigo-500 text-white hover:bg-indigo-600 rounded-md"
+                                >
+                                    <SaveIcon className="w-4 h-4 mr-2" />
+                                    {processing ? 'Actualizando...' : ' Actualizar Rol'}
+                                </Button>
+                            </div>
                         </div>
-                        )}
-                        {errors.permissions && <div className="text-red-600 text-sm mt-1">{errors.permissions}</div>}
-                    </div>
-          
-                    <div className="flex items-center justify-end">
-                        <button
-                            type="submit"
-                            disabled={processing}
-                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded focus:outline-none focus:shadow-outline transition"
-                        >
-                            {processing ? 'Submitting...' : 'Submit'}
-                        </button>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
-        </AppLayout>
+        </DashboardLayout>
     );
 }

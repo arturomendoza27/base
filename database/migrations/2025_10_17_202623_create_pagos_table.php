@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('pagos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('factura_id')->constrained('facturacion')->onDelete('cascade');
-            $table->date('fecha_pago')->default(Carbon::now());;
+            $table->date('fecha_pago')->nullable();
             $table->decimal('valor_pagado', 12, 2);
             $table->decimal('saldo_restante', 12, 2);
             $table->string('medio_pago')->nullable(); // efectivo, transferencia, etc.

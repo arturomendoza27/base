@@ -1,7 +1,7 @@
 import { Button } from "@headlessui/react"
 import { PlusIcon } from "lucide-react"
 
-function FacturaPdfMasiva({ cicloId }) {
+function FacturaPdfMasiva({ cicloId }: { cicloId: string | number }) {
   const verFacturaPdf = () => {
     window.open(`/facturacion/${cicloId}/pdf`, "_blank")
   }

@@ -16,7 +16,11 @@ class PagosController extends Controller
      */
     public function index(Request $request)
     {
-        $ciclo = CiclosFacturacion::with('facturas.predio.cliente')
+        // Determinar si la solicitud viene de la ruta 'caja' o 'pagos'
+        $routeName = $request->route()->getName();
+        
+        if ($routeName === 'caja.index') {
+            $ciclo = CiclosFacturacion::with('facturas.predio.cliente')
             ->latest('created_at')
             ->first();
 
@@ -30,12 +34,34 @@ class PagosController extends Controller
             ->orderByDesc('fecha_emision')
             ->paginate(1000)
             ->withQueryString();
-        return Inertia::render('Caja/Index', [
-            'datos' => $data,
-            'filters' => [
-                'search' => $request->search,
-            ],
-        ]);
+
+            return Inertia::render('Caja/Index', [
+                'datos' => $data,
+                'filters' => [
+                    'search' => $request->search,
+                ],
+            ]);
+        } else {
+            // Renderizar vista de gestión de pagos
+            $pagos = Pagos::with('factura.predio.cliente', 'factura.ciclo')
+                ->when($request->search, function ($query) use ($request) {
+                    $query->where('id', 'like', "%{$request->search}%")
+                        ->orWhere('valor_pagado', 'like', "%{$request->search}%")
+                        ->orWhere('medio_pago', 'like', "%{$request->search}%")
+                        ->orWhereRelation('factura.predio.cliente', 'nombre', 'like', "%{$request->search}%");
+                })
+                ->orderByDesc('fecha_pago')
+                ->orderByDesc('id')
+                ->paginate(10)
+                ->withQueryString();
+                
+            return Inertia::render('Pagos/Index', [
+                'pagos' => $pagos,
+                'filters' => [
+                    'search' => $request->search,
+                ],
+            ]);
+        }
     }
 
     /**
@@ -111,6 +137,7 @@ class PagosController extends Controller
                 'recibo_banco' => $validated['recibo_banco'] ?? null,
                 'recibo_numero' => $validated['recibo_numero'] ?? null,
                 'recibo_fecha' => $validated['recibo_fecha'] ?? null,
+                'fecha_pago' => now()->toDateString(),
 
             ]);
 
@@ -150,12 +177,22 @@ class PagosController extends Controller
         }
     }
 
+
     /**
      * Display the specified resource.
      */
-    public function show(Request $request)
+    public function show(string $id)
     {
-        //
+        $pago = Pagos::with([
+            'factura.predio.cliente',
+            'factura.ciclo',
+            'factura.predio.barrio',
+            'factura.predio.categoria'
+        ])->findOrFail($id);
+        
+        return Inertia::render('Pagos/Show', [
+            'pago' => $pago,
+        ]);
     }
 
     /**
@@ -177,8 +214,35 @@ class PagosController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request)
+    public function destroy(string $id)
     {
-        //
+        $pago = Pagos::with('factura')->findOrFail($id);
+        
+        try {
+            DB::beginTransaction();
+            
+            // Obtener la factura asociada
+            $factura = $pago->factura;
+            
+            // Eliminar el pago
+            $pago->delete();
+            
+            // Actualizar el estado de la factura a "pendiente"
+            if ($factura) {
+                $factura->update(['estado' => 'pendiente']);
+            }
+            
+            DB::commit();
+            
+            return redirect()
+                ->route('pagos.index')
+                ->with('success', 'Pago eliminado exitosamente y factura actualizada a pendiente.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return redirect()
+                ->back()
+                ->with('error', 'Fallo la eliminación del pago: ' . $e->getMessage());
+        }
     }
 }

@@ -18,7 +18,7 @@ import { Filters } from '../../types/index';
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Facturación',
-        href: '/facturar',
+        href: '/facturacion/facturar',
     },
     {
         title: 'Facturar',
@@ -40,7 +40,7 @@ export default function Create() {
 
     const handleCancel = () => {
 
-        router.visit('/facturas');
+        router.visit('/facturacion');
 
     }
 

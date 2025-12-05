@@ -92,32 +92,8 @@ class FacturacionController extends Controller
      */
     public function create()
     {
-        // Cargar datos necesarios para el formulario de creación de factura
-        $clientes = \App\Models\Clientes::where('estado', 'activo')->get();
-        $predios = \App\Models\Predios::with('categoria', 'cliente')->get();
-        $ciclos = \App\Models\CiclosFacturacion::where('estado', 'abierto')->get();
-
-        // Calcular saldo anterior para cada predio
-        $prediosConSaldo = $predios->map(function ($predio) {
-            $saldoAnterior = 0;
-            $ultimaFactura = Facturacion::where('predio_id', $predio->id)->latest('id')->first();
-            
-            if ($ultimaFactura) {
-                $pagosRealizados = Pagos::where('factura_id', $ultimaFactura->id)->sum('valor_pagado');
-                $saldoPendiente = floatval($ultimaFactura->total_factura) - floatval($pagosRealizados);
-                $saldoAnterior = $saldoPendiente;
-            }
-            
-            // Agregar saldo anterior al objeto predio
-            $predio->saldo_anterior = $saldoAnterior;
-            return $predio;
-        });
-
-        return Inertia::render('Facturacion/Create', [
-            'clientes' => $clientes,
-            'predios' => $prediosConSaldo,
-            'ciclos' => $ciclos,
-        ]);
+        //debo enviar datos
+        return Inertia::render('Facturacion/Create');
     }
 
     /**
@@ -174,11 +150,6 @@ class FacturacionController extends Controller
             $contadorFacturas = 0;
             activity()->disableLogging();
             foreach ($predios as $predio) {
-                // Validar si el predio está desconectado o suspendido - no generar factura
-                if ($predio->estado_servicio && in_array($predio->estado_servicio, ['desconectado', 'suspendido'])) {
-                    continue;
-                }
-                
                 // Buscar la tarifa vigente según la categoría del predio
                 $tarifa = Tarifas::where('categoria_id', $predio->categoria_id)
                     ->where('estado', 'activa')
@@ -317,45 +288,23 @@ class FacturacionController extends Controller
 
     public function store(Request $request)
     {
-        DB::beginTransaction();
+        $fechaActual = Carbon::now();
+        $fechaAnterior = Carbon::now()->subMonth();
+        $mes = $fechaAnterior->translatedFormat('F');
+        $anio = $fechaAnterior->year;
 
-        try {
-            // Validar datos requeridos
-            $validated = $request->validate([
-                'predio_id' => 'required|exists:predios,id',
-                'ciclo_id' => 'required|exists:ciclos_facturacion,id',
-                'cliente_id' => 'required|exists:clientes,id',
-                'fecha_emision' => 'required|date',
-                'fecha_vencimiento' => 'required|date',
-                'concepto' => 'required|string',
-                'saldo_anterior' => 'nullable|numeric|min:0',
-                'saldo_actual' => 'required|numeric|min:0',
-                'saldo_conexion' => 'nullable|numeric|min:0',
-                'saldo_reconexion' => 'nullable|numeric|min:0',
-                'total_factura' => 'required|numeric|min:0',
-                'estado' => 'required|in:pendiente,pagada,vencida,anulada',
-                'observaciones' => 'nullable|string',
-            ]);
+        // === 2️⃣ Verificar que exista ya un ciclo para el mes actual ===
+        $existeCiclo = CiclosFacturacion::where('anio', $anio)
+            ->where('mes',  $mes)
+            ->exists();
 
-            // Obtener el predio
-            $predio = Predios::with('categoria', 'cliente')->find($request->predio_id);
-            
-            if (!$predio) {
-                return redirect()
-                    ->route('facturacion.create')
-                    ->with('error', 'El predio no existe.');
-            }
+        if ($existeCiclo) {
+            //si existe ciclo puedo crear factura manual
+            $predios = Predios::with('categoria', 'cliente')->get();
 
-            // Validar si el predio está desconectado o suspendido - no generar factura
-            if ($predio->estado_servicio && in_array($predio->estado_servicio, ['desconectado', 'suspendido'])) {
-                return redirect()
-                    ->route('facturacion.create')
-                    ->with('error', "No se puede generar factura para un predio con estado: {$predio->estado_servicio}.");
-            }
+            // Buscar la tarifa vigente según la categoría del predio
 
-            // Obtener la tarifa vigente según la categoría del predio
-            $fechaActual = Carbon::now();
-            $tarifa = Tarifas::where('categoria_id', $predio->categoria_id)
+            $tarifa = Tarifas::where('categoria_id', $predios->categoria_id)
                 ->where('estado', 'activa')
                 ->whereDate('vigente_desde', '<=', $fechaActual)
                 ->where(function ($query) use ($fechaActual) {
@@ -364,93 +313,48 @@ class FacturacionController extends Controller
                 })
                 ->first();
 
-            if (!$tarifa) {
-                // Obtener información de la categoría para el mensaje de error
-                $categoriaNombre = $predio->categoria ? $predio->categoria->nombre : 'desconocida';
-                return redirect()
-                    ->route('facturacion.create')
-                    ->withErrors([
-                        'tarifa' => "No hay una tarifa vigente para la categoría '{$categoriaNombre}' del predio seleccionado. Por favor, cree una tarifa para esta categoría antes de generar la factura."
-                    ]);
-            }
 
-            // Verificar si el ciclo existe y está abierto
-            $ciclo = CiclosFacturacion::find($request->ciclo_id);
-            if (!$ciclo || $ciclo->estado !== 'abierto') {
-                return redirect()
-                    ->route('facturacion.create')
-                    ->with('error', 'El ciclo de facturación no está disponible o no está abierto.');
-            }
 
-            // Calcular saldo anterior automáticamente (última factura pendiente)
-            $saldoAnterior = 0;
-            $ultimaFactura = Facturacion::where('predio_id', $predio->id)->latest('id')->first();
-            if ($ultimaFactura) {
-                $pagosRealizados = Pagos::where('factura_id', $ultimaFactura->id)->sum('valor_pagado');
-                $saldoPendiente = floatval($ultimaFactura->total_factura) - floatval($pagosRealizados);
-                $saldoAnterior = $saldoPendiente;
-            }
+            $ultimaFactura = Facturacion::where('predio_id', $predios->id)
+                ->latest('id')
+                ->first();
 
-            // Crear la factura
+
+
+            // Valores base se
+            $saldoAnterior= $ultimaFactura->saldo_anterior;
+            $saldoActual     = //floatval($tarifa->valor);
+            $saldoConexion   = 0;
+            $saldoReconexion = 0;
+            $concepto        = 'Consumo mensual de agua';
+            $totalFactura =  + $tarifa->valor;
+
+
+
             $facturacion = Facturacion::create([
-                'ciclo_id' => $request->ciclo_id,
-                'predio_id' => $request->predio_id,
-                'cliente_id' => $request->cliente_id,
+                'ciclo_id' => $nuevoCiclo->id,
+                'predio_id' => $predio->id,
+                'cliente_id' => $predio->cliente_id,
                 'categoria_id' => $predio->categoria_id,
                 'tarifa_id' => $tarifa->id,
-                'fecha_emision' => $request->fecha_emision,
-                'fecha_vencimiento' => $request->fecha_vencimiento,
-                'concepto' => $request->concepto,
-                'saldo_anterior' => $saldoAnterior, // Usar saldo calculado automáticamente
-                'saldo_actual' => $request->saldo_actual,
-                'valor_conexion' => $request->saldo_conexion ?? 0,
-                'valor_reconexion' => $request->saldo_reconexion ?? 0,
-                'total_factura' => $request->total_factura,
-                'estado' => $request->estado,
-                'generada_automaticamente' => false,
+                'fecha_emision' => Carbon::now()->startOfMonth(),
+                'fecha_vencimiento' => $fechaActual->copy()->addDays(15),
+                'concepto' => $concepto,
+                'saldo_anterior' => $saldoAnterior, //operacion para obetener este saldo en facturas
+                'saldo_actual' => $saldoActual,
+                'valor_conexion' => $saldoConexion,
+                'valor_reconexion' => $saldoReconexion,
+                'total_factura' => $totalFactura,
+                'estado' => 'pendiente', // 👈 correcto estado por defecto
+                'generada_automaticamente' => true,
                 'observaciones' => $request->observaciones,
             ]);
 
-            // Si la factura está marcada como pagada y el total es 0 o positivo, crear un pago automático
-            if ($request->estado === 'pagada' && $request->total_factura <= 0) {
-                Pagos::create([
-                    'factura_id' => $facturacion->id,
-                    'valor_pagado' => 0,
-                    'saldo_restante' => $request->total_factura,
-                    'fecha_pago' => now(),
-                    'medio_pago' => 'Saldo a favor del usuario',
-                    'recibo_numero' => 'Pago automático por saldo a favor',
-                ]);
-            }
-
             DB::commit();
-
-            // Registrar actividad
-            activity('facturacion_manual')
-                ->performedOn($facturacion)
-                ->causedBy(Auth::user())
-                ->withProperties([
-                    'predio_id' => $predio->id,
-                    'ciclo_id' => $ciclo->id,
-                    'total_factura' => $request->total_factura,
-                ])
-                ->log("Factura manual creada para el predio {$predio->matricula_predial}");
-
+        } else {
             return redirect()
                 ->route('facturacion.index')
-                ->with('success', 'Factura creada exitosamente.');
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            DB::rollBack();
-            return redirect()
-                ->route('facturacion.create')
-                ->withErrors($e->validator)
-                ->withInput();
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()
-                ->route('facturacion.create')
-                ->with('error', 'Error al crear la factura: ' . $e->getMessage());
+                ->with('success', "No existe un ciclo de facturación para este mes.");
         }
     }
 

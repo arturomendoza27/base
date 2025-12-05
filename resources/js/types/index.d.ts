@@ -91,6 +91,7 @@ export interface Predio {
     cliente: Cliente;
     barrio: Barrio;
     categoria: CategoriaPredio;
+    saldo_anterior?: number;
 }
 
 export interface Factura {
@@ -113,6 +114,21 @@ export interface Factura {
     cliente: Cliente;
     predio: Predio;
     ciclo: CicloFacturacion;
+}
+
+export interface Pago {
+    id: number;
+    factura_id: number;
+    fecha_pago: string;
+    valor_pagado: number;
+    saldo_restante: number;
+    medio_pago: string;
+    recibo_banco?: string | null;
+    recibo_numero?: string | null;
+    recibo_fecha?: string | null;
+    created_at: string;
+    updated_at: string;
+    factura: Factura;
 }
 
 export interface CicloFacturacion {
