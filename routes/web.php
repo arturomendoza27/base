@@ -68,3 +68,4 @@ require __DIR__ . '/facturacion.php';
 require __DIR__ . '/pagos.php';
 require __DIR__ . '/caja.php';
 require __DIR__ . '/logs.php';
+require __DIR__ . '/reportes.php';

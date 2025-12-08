@@ -35,7 +35,7 @@ const navigation = [
   { name: "Facturación", href: "/facturacion", icon: FileTextIcon, permission: "facturacion.view" },
   { name: "Caja", href: "/caja", icon: WalletIcon, permission: "caja.view" },
   { name: "Pagos", href: "/pagos", icon: CreditCardIcon, permission: "pagos.view" },
-  { name: "Reportes", href: "/reportes", icon: BarChart3Icon, permission: "reportes.view" },
+  // { name: "Reportes", href: "/reportes", icon: BarChart3Icon, permission: "reportes.view" },
   { name: "Usuarios", href: "/users", icon: UsersIcon, permission: "users.view" },
   { name: "Roles", href: "/roles", icon: BookLockIcon, permission: "roles.view" },
   { name: "Logs", href: "/log", icon: BarChart3Icon, permission: "log.view" },
