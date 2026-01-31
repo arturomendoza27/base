@@ -24,7 +24,7 @@ class UserSeeder extends Seeder
             ['email' => 'superadmin@example.com'],
             [
                 'name' => 'Super Administrador',
-                'password' => Hash::make('Juande05%'),
+                'password' => Hash::make('Acueducto123'),
                 'email_verified_at' => now(),
             ]
         );
@@ -36,7 +36,7 @@ class UserSeeder extends Seeder
             ['email' => 'moderador@example.com'],
             [
                 'name' => 'Juan Moderador',
-                'password' => Hash::make('Juande05%'),
+                'password' => Hash::make('Acueducto123'),
                 'email_verified_at' => now(),
             ]
         );
@@ -48,7 +48,7 @@ class UserSeeder extends Seeder
             ['email' => 'usuario@example.com'],
             [
                 'name' => 'María Usuario',
-                'password' => Hash::make('Juande05%'),
+                'password' => Hash::make('Acueducto123'),
                 'email_verified_at' => now(),
             ]
         );
@@ -65,7 +65,7 @@ class UserSeeder extends Seeder
                 ['email' => "admin{$i}@example.com"],
                 [
                     'name' => "Admin {$i}",
-                    'password' => Hash::make('Juande05%'),
+                    'password' => Hash::make('Acueducto123'),
                     'email_verified_at' => now(),
                 ]
             );
@@ -79,7 +79,7 @@ class UserSeeder extends Seeder
                 ['email' => "mod{$i}@example.com"],
                 [
                     'name' => "Moderador {$i}",
-                    'password' => Hash::make('Juande05%'),
+                    'password' => Hash::make('Acueducto123'),
                     'email_verified_at' => now(),
                 ]
             );
@@ -93,7 +93,7 @@ class UserSeeder extends Seeder
                 ['email' => "user{$i}@example.com"],
                 [
                     'name' => "Usuario {$i}",
-                    'password' => Hash::make('Juande05%'),
+                    'password' => Hash::make('Acueducto123'),
                     'email_verified_at' => now(),
                 ]
             );
@@ -113,6 +113,6 @@ class UserSeeder extends Seeder
         );
 
         $this->command->newLine();
-        $this->command->warn('🔑 Todas las contraseñas son: password');
+        $this->command->warn('🔑 Todas las contraseñas son: Acueducto123');
     }
 }
