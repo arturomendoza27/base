@@ -52,7 +52,7 @@ class PagosController extends Controller
                 })
                 ->orderByDesc('fecha_pago')
                 ->orderByDesc('id')
-                ->paginate(10)
+                ->paginate(5)
                 ->withQueryString();
                 
             return Inertia::render('Pagos/Index', [

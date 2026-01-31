@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { can } from '@/lib/can';
+import { getGroupedPermissions, transformPermissionName, type GroupedPermission } from '@/lib/permission-utils';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -25,6 +26,10 @@ interface ShowProps {
 }
 
 export default function Show({ role, rolePermissions }: ShowProps) {
+    const groupedPermissions = rolePermissions && rolePermissions.length > 0 
+        ? getGroupedPermissions(rolePermissions)
+        : [];
+
     return (
         <DashboardLayout>
             <Head title={`Rol: ${role.name}`} />
@@ -114,12 +119,24 @@ export default function Show({ role, rolePermissions }: ShowProps) {
                                     </Badge>
                                 </div>
                                 
-                                {rolePermissions && rolePermissions.length > 0 ? (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                        {rolePermissions.map((permission, index) => (
-                                            <div key={index} className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-                                                <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                                                <span className="text-sm font-medium">{permission}</span>
+                                {groupedPermissions.length > 0 ? (
+                                    <div className="space-y-4">
+                                        {groupedPermissions.map((group: GroupedPermission) => (
+                                            <div key={group.resource} className="space-y-3">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="h-1 w-4 bg-primary rounded-full"></div>
+                                                    <h3 className="font-medium text-sm text-gray-700">
+                                                        {group.resourceLabel}
+                                                    </h3>
+                                                </div>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 pl-6">
+                                                    {group.permissions.map((permission) => (
+                                                        <div key={permission.name} className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                                                            <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                                                            <span className="text-sm font-medium">{permission.label}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
                                         ))}
                                     </div>

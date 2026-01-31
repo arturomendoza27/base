@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { router } from '@inertiajs/react';
+import { getGroupedPermissions, getSelectedCountFromGrouped, type GroupedPermission } from '@/lib/permission-utils';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -30,6 +31,8 @@ export default function Create({ permissions }: CreateProps) {
         permissions: [] as string[],
     });
 
+    const groupedPermissions = getGroupedPermissions(permissions);
+
     function handleCheckboxChange(permissionName: string, checked: boolean) {
         if (checked) {
             setData('permissions', [...data.permissions, permissionName]);
@@ -37,6 +40,8 @@ export default function Create({ permissions }: CreateProps) {
             setData('permissions', data.permissions.filter((p) => p !== permissionName));
         }
     }
+
+    const selectedCount = getSelectedCountFromGrouped(groupedPermissions, data.permissions);
 
     function submit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
@@ -92,28 +97,40 @@ export default function Create({ permissions }: CreateProps) {
                                         <Label>
                                             Permisos <span className="text-destructive">*</span>
                                         </Label>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                            {permissions.map((permission) => (
-                                                <div key={permission} className="flex items-center space-x-2">
-                                                    <Checkbox
-                                                        id={permission}
-                                                        checked={data.permissions.includes(permission)}
-                                                        onCheckedChange={(checked) => 
-                                                            handleCheckboxChange(permission, checked === true)
-                                                        }
-                                                    />
-                                                    <Label
-                                                        htmlFor={permission}
-                                                        className="text-sm font-normal cursor-pointer"
-                                                    >
-                                                        {permission}
-                                                    </Label>
+                                        
+                                        {groupedPermissions.map((group: GroupedPermission) => (
+                                            <div key={group.resource} className="space-y-3">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="h-1 w-4 bg-primary rounded-full"></div>
+                                                    <h3 className="font-medium text-sm text-gray-700">
+                                                        {group.resourceLabel}
+                                                    </h3>
                                                 </div>
-                                            ))}
-                                        </div>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 pl-6">
+                                                    {group.permissions.map((permission) => (
+                                                        <div key={permission.name} className="flex items-center space-x-2">
+                                                            <Checkbox
+                                                                id={permission.name}
+                                                                checked={data.permissions.includes(permission.name)}
+                                                                onCheckedChange={(checked) => 
+                                                                    handleCheckboxChange(permission.name, checked === true)
+                                                                }
+                                                            />
+                                                            <Label
+                                                                htmlFor={permission.name}
+                                                                className="text-sm font-normal cursor-pointer"
+                                                            >
+                                                                {permission.label}
+                                                            </Label>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ))}
+                                        
                                         {errors.permissions && <div className="text-red-600 text-sm mt-1">{errors.permissions}</div>}
                                         <p className="text-sm text-muted-foreground">
-                                            Seleccionados: {data.permissions.length} de {permissions.length} permisos
+                                            Seleccionados: {selectedCount} de {permissions.length} permisos
                                         </p>
                                     </div>
                                 </CardContent>
