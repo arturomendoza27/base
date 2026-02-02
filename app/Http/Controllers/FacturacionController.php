@@ -347,11 +347,11 @@ class FacturacionController extends Controller
             }
 
             // Validar si el predio está desconectado o suspendido - no generar factura
-            if ($predio->estado_servicio && in_array($predio->estado_servicio, ['desconectado', 'suspendido'])) {
-                return redirect()
-                    ->route('facturacion.create')
-                    ->with('error', "No se puede generar factura para un predio con estado: {$predio->estado_servicio}.");
-            }
+            // if ($predio->estado_servicio && in_array($predio->estado_servicio, ['desconectado', 'suspendido'])) {
+            //     return redirect()
+            //         ->route('facturacion.create')
+            //         ->with('error', "No se puede generar factura para un predio con estado: {$predio->estado_servicio}.");
+            // }
 
             // Obtener la tarifa vigente según la categoría del predio
             $fechaActual = Carbon::now();
@@ -403,8 +403,8 @@ class FacturacionController extends Controller
                 'concepto' => $request->concepto,
                 'saldo_anterior' => $saldoAnterior, // Usar saldo calculado automáticamente
                 'saldo_actual' => $request->saldo_actual,
-                'valor_conexion' => $request->saldo_conexion ?? 0,
-                'valor_reconexion' => $request->saldo_reconexion ?? 0,
+                'saldo_conexion' => $request->saldo_conexion,
+                'saldo_reconexion' => $request->saldo_reconexion,
                 'total_factura' => $request->total_factura,
                 'estado' => $request->estado,
                 'generada_automaticamente' => false,
@@ -421,6 +421,8 @@ class FacturacionController extends Controller
                     'medio_pago' => 'Saldo a favor del usuario',
                     'recibo_numero' => 'Pago automático por saldo a favor',
                 ]);
+                $predio->update(['estado_servicio' => 'activo']);
+
             }
 
             DB::commit();

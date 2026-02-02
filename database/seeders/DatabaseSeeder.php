@@ -21,22 +21,20 @@ class DatabaseSeeder extends Seeder
         $this->command->newLine();
 
         // 1. Crear permisos
-        $this->command->info('📝 Paso 1/6: Creando permisos...');
+        $this->command->info('📝 Paso 1/7: Creando permisos...');
         $this->call(PermissionSeeder::class);
         $this->command->newLine();
 
         // 2. Crear roles y asignar permisos
-        $this->command->info('👥 Paso 2/6: Creando roles...');
+        $this->command->info('👥 Paso 2/7: Creando roles...');
         $this->call(RoleSeeder::class);
         $this->command->newLine();
 
         // 3. Crear usuarios de prueba
-        $this->command->info('👤 Paso 3/6: Creando usuarios...');
+        $this->command->info('👤 Paso 3/7: Creando usuarios...');
         $this->call(UserSeeder::class);
         $this->command->newLine();
 
-        $this->command->info('✅ Proceso de seeding completado exitosamente!');
-        $this->command->newLine();
 
         $this->command->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         $this->command->info('📋 CREDENCIALES DE ACCESO');
@@ -46,25 +44,33 @@ class DatabaseSeeder extends Seeder
         $this->command->table(
             ['Rol', 'Email', 'Password'],
             [
-                ['Super Admin', 'superadmin@example.com', 'password'],
-                ['Moderador', 'moderador@example.com', 'password'],
-                ['Usuario', 'usuario@example.com', 'password'],
+                ['Super Admin', 'superadmin@example.com', 'Acueducto123'],
+                ['Moderador', 'moderador@example.com', 'Acueducto123'],
+                ['Usuario', 'usuario@example.com', 'Acueducto123'],
             ]
         );
 
         // 4. Crear barrios
-        $this->command->info('📝 Paso 4/6: Creando barrios...');
+        $this->command->info('📝 Paso 4/7: Creando barrios...');
         $this->call(BarriosSeeder::class);
         $this->command->newLine();
 
          // 5. Crear categorias
-        $this->command->info('📝 Paso 5/6: Creando categorias...');
+        $this->command->info('📝 Paso 5/7: Creando categorias...');
         $this->call(CategoriasPrediosSeeder::class);
         $this->command->newLine();
 
-          // 6. Crear categorias
-        $this->command->info('📝 Paso 6/6: Creando ciclo de facturación...');
+         // 6. Crear tarifas
+        $this->command->info('📝 Paso 6/7: Creando categorias...');
+        $this->call(TarifasSeeder::class);
+        $this->command->newLine();
+
+          // 7. Crear categorias
+        $this->command->info('📝 Paso 7/7: Creando ciclo de facturación...');
         $this->call(CicloSeeder::class);
+        $this->command->newLine();
+
+        $this->command->info('✅ Proceso de seeding completado exitosamente!');
         $this->command->newLine();
 
         $this->command->newLine();

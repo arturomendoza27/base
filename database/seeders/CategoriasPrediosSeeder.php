@@ -17,14 +17,14 @@ class CategoriasPrediosSeeder extends Seeder
         $now = now();
         CategoriasPredios::insert([
             [
-                'nombre' => 'Preferencial',
-                'descripcion' => 'Tarifa preferencial',
+                'nombre' => 'Residencial',
+                'descripcion' => 'Tarifa residencial',
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
             [
-                'nombre' => 'Residencial',
-                'descripcion' => 'Tarifa residencial',
+                'nombre' => 'Preferencial',
+                'descripcion' => 'Tarifa preferencial',
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
