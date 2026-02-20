@@ -1,6 +1,6 @@
-FROM php:8.2-fpm
+FROM php:8.3-fpm
 
-# Instalar dependencias del sistema necesarias para Laravel y PhpSpreadsheet
+# Dependencias del sistema
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -11,9 +11,10 @@ RUN apt-get update && apt-get install -y \
     libfreetype6-dev \
     libzip-dev \
     libonig-dev \
-    libxml2-dev
+    libxml2-dev \
+    libicu-dev
 
-# Instalar extensiones PHP obligatorias
+# Extensiones PHP necesarias para Laravel + Excel
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install \
         pdo_mysql \
@@ -22,19 +23,30 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
         gd \
         zip \
         exif \
-        pcntl
+        pcntl \
+        xml \
+        intl
 
-# Instalar Composer
+# Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Directorio de trabajo
 WORKDIR /var/www
 
 # Copiar proyecto
 COPY . .
 
-# Instalar dependencias Laravel
-RUN composer install --optimize-autoloader --no-interaction
+# Evitar errores si .env no existe en build
+RUN cp .env.example .env || true
+
+# Instalar dependencias (respetando composer.lock)
+RUN composer install --optimize-autoloader --no-interaction --no-scripts
+
+# Permisos Laravel
+RUN chown -R www-data:www-data /var/www \
+    && chmod -R 775 storage bootstrap/cache
+
+EXPOSE 9000
+CMD ["php-fpm"]RUN composer install --optimize-autoloader --no-interaction
 
 # Permisos (importante para storage y cache)
 RUN chown -R www-data:www-data /var/www \
