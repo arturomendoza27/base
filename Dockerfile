@@ -1,4 +1,7 @@
-FROM php:8.3-fpm
+FROM php:8.3-apache
+
+# Activar mod_rewrite (obligatorio para Laravel)
+RUN a2enmod rewrite
 
 # Dependencias del sistema
 RUN apt-get update && apt-get install -y \
@@ -14,7 +17,7 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libicu-dev
 
-# Extensiones PHP necesarias para Laravel + Excel
+# Extensiones PHP necesarias
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install \
         pdo_mysql \
@@ -30,28 +33,26 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
 # Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-WORKDIR /var/www
+# Directorio del servidor web (Laravel usa /public)
+WORKDIR /var/www/html
 
 # Copiar proyecto
 COPY . .
 
-# Evitar errores si .env no existe en build
+# Configurar Apache para apuntar a /public (CRÍTICO)
+ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
+RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+
+# Crear .env si no existe
 RUN cp .env.example .env || true
 
-# Instalar dependencias (respetando composer.lock)
+# Instalar dependencias Laravel
 RUN composer install --optimize-autoloader --no-interaction --no-scripts
 
 # Permisos Laravel
-RUN chown -R www-data:www-data /var/www \
+RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 storage bootstrap/cache
 
-EXPOSE 9000
-CMD ["php-fpm"]RUN composer install --optimize-autoloader --no-interaction
-
-# Permisos (importante para storage y cache)
-RUN chown -R www-data:www-data /var/www \
-    && chmod -R 775 storage bootstrap/cache
-
-EXPOSE 9000
-
-CMD ["php-fpm"] 
+EXPOSE 80
+CMD ["apache2-foreground"]
