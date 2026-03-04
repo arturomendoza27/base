@@ -15,7 +15,7 @@ class BackupController extends Controller
      */
     public function index()
     {
-        return inertia('Backups/index', [
+        return inertia('Backups/Index', [
             'backupExists' => $this->backupExists(),
             'backupSize' => $this->getBackupSize(),
             'lastModified' => $this->getLastModified(),

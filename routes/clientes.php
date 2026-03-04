@@ -7,7 +7,7 @@ use Inertia\Inertia;
 Route::middleware('auth')->group(function () {
     Route::redirect('clientes', '/clientes/index');
      // Clientes routes 
-    //importar clientes Excel
+    //importar clientes Excel 
     Route::middleware('permission:clientes.import')->group(function () {
         Route::get('/clientes/import', function () {
             return Inertia::render('Clientes/Import');
