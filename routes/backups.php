@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Rutas de respaldos - solo para administradores
-    Route::middleware('permission:backups.manage')->group(function () {
+    Route::middleware('permission:settings.view')->group(function () {
         Route::get('backups', [BackupController::class, 'index'])
             ->name('backups.index');
             
