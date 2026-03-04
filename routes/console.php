@@ -10,4 +10,3 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('app:cambio-estados-facturas')->everyMinute();
-Schedule::command('backup:bd')->everyMinute();

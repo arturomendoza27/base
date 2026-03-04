@@ -20,6 +20,7 @@ import {
   ContactRoundIcon,
   BookLockIcon,
   LogOutIcon,
+  DatabaseIcon,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { can } from '@/lib/can';
@@ -39,6 +40,7 @@ const navigation = [
   { name: "Usuarios", href: "/users", icon: UsersIcon, permission: "users.view" },
   { name: "Roles", href: "/roles", icon: BookLockIcon, permission: "roles.view" },
   { name: "Logs", href: "/log", icon: BarChart3Icon, permission: "log.view" },
+  { name: "Respaldo BD", href: "/backups", icon: DatabaseIcon, permission: "backups.manage" },
   { name: "Cerrar Sesión", href: "/logout", icon: LogOutIcon },
 
 ]

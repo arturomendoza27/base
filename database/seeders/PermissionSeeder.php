@@ -73,13 +73,14 @@ class PermissionSeeder extends Seeder
             "reportes.import",
             "reportes.export",
             "log.view",
-            'settings.view'
+            'settings.view',
+            'backups.manage'
              
 
         ];
 
         foreach ($permissions as $value) {
-            Permission::create(['name' => $value]);
+            Permission::firstOrCreate(['name' => $value]);
         }
     }
 }

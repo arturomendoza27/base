@@ -1,9 +1,14 @@
+# ============================================
+# Base PHP + Apache
+# ============================================
 FROM php:8.3-apache
 
-# Activar mod_rewrite (obligatorio para Laravel)
+# Activar mod_rewrite (Laravel obligatorio)
 RUN a2enmod rewrite
 
+# ============================================
 # Dependencias del sistema
+# ============================================
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -15,9 +20,13 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     libonig-dev \
     libxml2-dev \
-    libicu-dev
+    libicu-dev \
+    gnupg \
+    && rm -rf /var/lib/apt/lists/*
 
+# ============================================
 # Extensiones PHP necesarias
+# ============================================
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install \
         pdo_mysql \
@@ -30,29 +39,63 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
         xml \
         intl
 
+# ============================================
+# Instalar Node.js 20 (para Vite build)
+# ============================================
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs
+
+# ============================================
 # Composer
+# ============================================
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Directorio del servidor web (Laravel usa /public)
+# ============================================
+# Directorio de trabajo
+# ============================================
 WORKDIR /var/www/html
 
 # Copiar proyecto
 COPY . .
 
-# Configurar Apache para apuntar a /public (CRÍTICO)
+# ============================================
+# Configurar Apache para apuntar a /public
+# ============================================
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
-RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
-# Crear .env si no existe
-RUN cp .env.example .env || true
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf \
+    && sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
-# Instalar dependencias Laravel
-RUN composer install --optimize-autoloader --no-interaction --no-scripts
+# ============================================
+# Instalar dependencias PHP (sin dev)
+# ============================================
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 
+# ============================================
+# Instalar dependencias frontend y compilar Vite
+# ============================================
+RUN npm install \
+    && npm run build
+
+# ============================================
 # Permisos Laravel
+# ============================================
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 storage bootstrap/cache
 
+# ============================================
+# Optimización Laravel (cache producción)
+# ============================================
+RUN php artisan config:cache \
+    && php artisan route:cache \
+    && php artisan view:cache
+
+# ============================================
+# Exponer puerto
+# ============================================
 EXPOSE 80
+
+# ============================================
+# Comando principal
+# ============================================
 CMD ["apache2-foreground"]
