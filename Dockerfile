@@ -7,7 +7,7 @@ FROM php:8.3-apache
 RUN a2enmod rewrite
 
 # ============================================
-# Dependencias del sistema
+# Dependencias del sistema + cliente MySQL (MariaDB)
 # ============================================
 RUN apt-get update && apt-get install -y \
     git \
@@ -22,6 +22,8 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libicu-dev \
     gnupg \
+    # Cliente MySQL (MariaDB) para mysqldump y mysql
+    mariadb-client \
     && rm -rf /var/lib/apt/lists/*
 
 # ============================================
@@ -38,12 +40,13 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
         pcntl \
         xml \
         intl
-RUN apt-get update && apt-get install -y default-mysql-client
+
 # ============================================
 # Instalar Node.js 20 (para Vite build)
 # ============================================
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs
+    && apt-get install -y nodejs \
+    && rm -rf /var/lib/apt/lists/*
 
 # ============================================
 # Composer

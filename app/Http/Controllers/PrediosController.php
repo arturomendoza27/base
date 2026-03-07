@@ -85,7 +85,7 @@ class PrediosController extends Controller
             'barrio_id' => 'required|integer',
             'matricula_predial' => 'required|string',
             'direccion_predio' => 'required|string|unique:predios,direccion_predio',
-            'ruta' => 'required|string|unique:predios,ruta',
+            'ruta' => 'required|string',
             'categoria_id' => 'required',
         ]);
 
@@ -192,7 +192,7 @@ class PrediosController extends Controller
             'barrio_id' => 'required|integer',
             'matricula' => 'required|string|max:255',
             'direccion' => 'required|string|max:255|unique:predios,direccion_predio,' . $data->id,
-            'ruta' => 'required|string|max:255|unique:predios,ruta,' . $data->id,
+            'ruta' => 'required|string|max:255,' . $data->id,
             'estado' => 'required',
             'categoria_id' => 'required'
         ]);

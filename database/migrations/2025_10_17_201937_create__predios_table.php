@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('matricula_predial')->unique();
             $table->string('direccion_predio');
             $table->foreignId('barrio_id')->constrained('barrios')->onDelete('cascade');
-            $table->string('ruta')->nullable()->unique();
+            $table->string('ruta')->nullable();
             $table->enum('estado_servicio', ['activo', 'suspendido', 'desconectado'])->default('activo'); 
             $table->date('fecha_conexion')->nullable();
             $table->date('fecha_suspension')->nullable();
