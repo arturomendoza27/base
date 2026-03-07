@@ -69,6 +69,9 @@ class BackupController extends Controller
             $dbName = config('database.connections.mysql.database');
             $dbUser = config('database.connections.mysql.username');
             $dbPass = config('database.connections.mysql.password');
+            
+            // Limpiar la contraseña (eliminar espacios en blanco al inicio/final)
+            $dbPass = trim($dbPass);
 
             // Construir el comando mysqldump con ruta obtenida dinámicamente
             $mysqldumpPath = $this->getMysqldumpPath();
@@ -77,32 +80,37 @@ class BackupController extends Controller
             $additionalOptions = [];
             
             // Para problemas de autenticación caching_sha2_password en MySQL 8+ (especialmente en Windows/XAMPP)
+            // Nota: MariaDB (XAMPP) no soporta --ssl-mode=DISABLED, así que lo omitimos
             if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-                // Intentar múltiples opciones para resolver problemas de autenticación
+                // Solo agregar --default-auth=mysql_native_password para problemas de autenticación
                 $additionalOptions[] = '--default-auth=mysql_native_password';
-                $additionalOptions[] = '--ssl-mode=DISABLED';
-                $additionalOptions[] = '--protocol=TCP';
             }
             
-            // Para todos los sistemas, agregar opciones útiles
+            // Para todos los sistemas, agregar opciones útiles (pero compatibles)
             $additionalOptions[] = '--single-transaction';
             $additionalOptions[] = '--routines';
-            $additionalOptions[] = '--events';
             $additionalOptions[] = '--triggers';
+            // Nota: --events puede causar problemas en algunas versiones, lo omitimos por ahora
             
-            $optionsString = implode(' ', $additionalOptions);
+            // Construir el comando de forma más robusta
+            $commandParts = [$mysqldumpPath];
             
-            $command = sprintf(
-                '%s %s --host=%s --port=%s --user=%s --password=%s %s > "%s"',
-                $mysqldumpPath,
-                $optionsString,
-                escapeshellarg($dbHost),
-                escapeshellarg($dbPort),
-                escapeshellarg($dbUser),
-                escapeshellarg($dbPass),
-                escapeshellarg($dbName),
-                escapeshellarg($backupPath)
-            );
+            // Agregar opciones si existen
+            if (!empty($additionalOptions)) {
+                $commandParts = array_merge($commandParts, $additionalOptions);
+            }
+            
+            // Agregar parámetros de conexión
+            $commandParts[] = '--host=' . escapeshellarg($dbHost);
+            $commandParts[] = '--port=' . escapeshellarg($dbPort);
+            $commandParts[] = '--user=' . escapeshellarg($dbUser);
+            $commandParts[] = '--password=' . escapeshellarg($dbPass);
+            $commandParts[] = escapeshellarg($dbName);
+            
+            // Redireccionar salida al archivo (sin comillas extra alrededor del path)
+            $commandParts[] = '>' . escapeshellarg($backupPath);
+            
+            $command = implode(' ', $commandParts);
 
             // Ejecutar el comando con logging detallado
             $output = [];
