@@ -61,9 +61,11 @@ class BackupController extends Controller
             $dbUser = config('database.connections.mysql.username');
             $dbPass = config('database.connections.mysql.password');
 
-            // Construir el comando mysqldump con ruta completa
+            // Construir el comando mysqldump con ruta obtenida dinámicamente
+            $mysqldumpPath = $this->getMysqldumpPath();
             $command = sprintf(
-                '"C:\xampp\mysql\bin\mysqldump.exe" --host=%s --port=%s --user=%s --password=%s %s > "%s"',
+                '%s --host=%s --port=%s --user=%s --password=%s %s > "%s"',
+                $mysqldumpPath,
                 escapeshellarg($dbHost),
                 escapeshellarg($dbPort),
                 escapeshellarg($dbUser),
@@ -130,11 +132,95 @@ class BackupController extends Controller
      */
     private function isMysqldumpAvailable(): bool
     {
+        $mysqldumpPath = $this->getMysqldumpPath();
         $output = [];
         $returnVar = 0;
-        exec('"C:\xampp\mysql\bin\mysqldump.exe" --version 2>&1', $output, $returnVar);
+        exec($mysqldumpPath . ' --version 2>&1', $output, $returnVar);
         
         return $returnVar === 0;
+    }
+
+    /**
+     * Obtiene la ruta de mysqldump configurada o busca en el PATH
+     */
+    private function getMysqldumpPath(): string
+    {
+        // 1. Primero intentar con la variable de entorno MYSQLDUMP_PATH
+        $customPath = env('MYSQLDUMP_PATH');
+        if ($customPath && $this->isExecutable($customPath)) {
+            return $this->quotePath($customPath);
+        }
+
+        // 2. Para Windows: intentar con la ruta de XAMPP por defecto
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            $windowsPaths = [
+                'C:\xampp\mysql\bin\mysqldump.exe',
+                'C:\Program Files\MySQL\MySQL Server 8.0\bin\mysqldump.exe',
+                'C:\Program Files\MySQL\MySQL Server 5.7\bin\mysqldump.exe',
+                'C:\Program Files\MariaDB 10.11\bin\mysqldump.exe',
+                'C:\Program Files\MariaDB 10.10\bin\mysqldump.exe',
+                'mysqldump.exe'
+            ];
+
+            foreach ($windowsPaths as $path) {
+                if ($this->isExecutable($path)) {
+                    return $this->quotePath($path);
+                }
+            }
+        } else {
+            // 3. Para Linux/Unix: buscar en rutas comunes y PATH
+            $unixPaths = [
+                '/usr/bin/mysqldump',
+                '/usr/local/bin/mysqldump',
+                '/opt/homebrew/bin/mysqldump',
+                '/usr/local/mysql/bin/mysqldump',
+                'mysqldump'
+            ];
+
+            foreach ($unixPaths as $path) {
+                if ($this->isExecutable($path)) {
+                    return $path;
+                }
+            }
+        }
+
+        // 4. Si no se encuentra, devolver 'mysqldump' para que el error sea claro
+        return 'mysqldump';
+    }
+
+    /**
+     * Verifica si un archivo es ejecutable
+     */
+    private function isExecutable(string $path): bool
+    {
+        // Para rutas absolutas, verificar si el archivo existe y es ejecutable
+        if (str_contains($path, DIRECTORY_SEPARATOR) || (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN' && str_contains($path, ':'))) {
+            return file_exists($path) && is_executable($path);
+        }
+        
+        // Para comandos en PATH, usar 'which' o 'where'
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            $output = [];
+            $returnVar = 0;
+            exec('where ' . escapeshellarg($path) . ' 2>&1', $output, $returnVar);
+            return $returnVar === 0 && !empty($output);
+        } else {
+            $output = [];
+            $returnVar = 0;
+            exec('which ' . escapeshellarg($path) . ' 2>&1', $output, $returnVar);
+            return $returnVar === 0 && !empty($output);
+        }
+    }
+
+    /**
+     * Agrega comillas a la ruta si es necesario (para Windows)
+     */
+    private function quotePath(string $path): string
+    {
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN' && str_contains($path, ' ')) {
+            return '"' . $path . '"';
+        }
+        return $path;
     }
 
     /**

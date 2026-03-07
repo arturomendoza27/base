@@ -17,7 +17,9 @@ Sistema de respaldo manual para el proyecto Laravel 12 con MySQL que cumple con 
 
 3. **Uso de mysqldump para generación**
    - Utiliza el comando `mysqldump` de MySQL/MariaDB
-   - Ruta configurada para XAMPP: `C:\xampp\mysql\bin\mysqldump.exe`
+   - **Ruta configurable** mediante variable de entorno `MYSQLDUMP_PATH`
+   - Búsqueda automática en rutas comunes y PATH del sistema
+   - Compatible con Windows, Linux y contenedores Docker
 
 4. **Ubicación y nombre del archivo**
    - Ruta: `storage/app/backups/backup.sql`
@@ -77,11 +79,32 @@ Sistema de respaldo manual para el proyecto Laravel 12 con MySQL que cumple con 
 ## Instalación y Configuración
 
 ### 1. Requisitos Previos
-- XAMPP con MySQL/MariaDB instalado
-- Ruta de mysqldump: `C:\xampp\mysql\bin\mysqldump.exe`
+- MySQL/MariaDB instalado o disponible en contenedor
+- Comando `mysqldump` disponible en el sistema
 - Permisos de escritura en `storage/app/backups/`
 
-### 2. Pasos de Instalación
+### 2. Configuración de mysqldump
+
+El sistema busca automáticamente `mysqldump` en las siguientes ubicaciones:
+
+#### Windows:
+1. Variable de entorno `MYSQLDUMP_PATH` (configurable en `.env`)
+2. `C:\xampp\mysql\bin\mysqldump.exe`
+3. `C:\Program Files\MySQL\MySQL Server 8.0\bin\mysqldump.exe`
+4. `C:\Program Files\MySQL\MySQL Server 5.7\bin\mysqldump.exe`
+5. `C:\Program Files\MariaDB 10.11\bin\mysqldump.exe`
+6. `C:\Program Files\MariaDB 10.10\bin\mysqldump.exe`
+7. `mysqldump.exe` (en PATH del sistema)
+
+#### Linux/Unix/Contenedores:
+1. Variable de entorno `MYSQLDUMP_PATH` (configurable en `.env`)
+2. `/usr/bin/mysqldump`
+3. `/usr/local/bin/mysqldump`
+4. `/opt/homebrew/bin/mysqldump`
+5. `/usr/local/mysql/bin/mysqldump`
+6. `mysqldump` (en PATH del sistema)
+
+### 3. Pasos de Instalación
 
 ```bash
 # Ejecutar migraciones (si es necesario)
@@ -90,18 +113,39 @@ php artisan migrate
 # Ejecutar seeder para agregar el permiso
 php artisan db:seed --class=PermissionSeeder
 
+# Crear directorio de respaldos (si no existe)
+mkdir -p storage/app/backups
+
+# Asignar permisos de escritura
+chmod 775 storage/app/backups
+
 # Asignar permiso a roles existentes (opcional)
 # Desde la interfaz de administración de roles
 ```
 
-### 3. Verificación
+### 4. Configuración en `.env`
+
+Agregar la siguiente línea al archivo `.env` si es necesario:
+
+```env
+# Para Windows con XAMPP:
+MYSQLDUMP_PATH="C:\xampp\mysql\bin\mysqldump.exe"
+
+# Para Linux/Unix:
+# MYSQLDUMP_PATH="/usr/bin/mysqldump"
+
+# Para contenedores Docker (mysqldump en PATH):
+# MYSQLDUMP_PATH="mysqldump"
+```
+
+### 5. Verificación
 
 ```bash
 # Verificar rutas registradas
 php artisan route:list --name=backups
 
 # Verificar que mysqldump esté disponible
-"C:\xampp\mysql\bin\mysqldump.exe" --version
+php artisan tinker --execute="echo app('App\Http\Controllers\BackupController')->isMysqldumpAvailable() ? 'Disponible' : 'No disponible';"
 ```
 
 ## Uso del Sistema
@@ -146,36 +190,50 @@ storage/app/backups/                           # Directorio de respaldos
 ## Solución de Problemas
 
 ### Error: "mysqldump no está disponible"
-- Verificar que XAMPP esté instalado
-- Confirmar ruta: `C:\xampp\mysql\bin\mysqldump.exe`
-- Agregar ruta al PATH del sistema si es necesario
+- **Windows**: Verificar que XAMPP/MySQL esté instalado y la ruta sea correcta
+- **Linux/Contenedores**: Verificar que `mysqldump` esté instalado (`apt-get install mysql-client` o similar)
+- **Configuración personalizada**: Agregar `MYSQLDUMP_PATH` en el archivo `.env`
+- **Verificación**: Ejecutar `php artisan tinker --execute="echo app('App\Http\Controllers\BackupController')->isMysqldumpAvailable() ? 'Disponible' : 'No disponible';"`
 
 ### Error: "No hay permisos de escritura"
 - Verificar permisos en `storage/app/backups/`
 - Asegurar que el servidor web tenga permisos de escritura
+- Ejecutar: `chmod 775 storage/app/backups` (Linux) o ajustar permisos en Windows
 
 ### Error: "No se pudo eliminar el respaldo anterior"
 - Verificar que el archivo no esté en uso
 - Revisar permisos del archivo existente
+- Verificar que el proceso de respaldo anterior haya finalizado
+
+### Error: "El respaldo se generó pero el archivo está vacío"
+- Verificar credenciales de la base de datos en `.env`
+- Comprobar que la base de datos exista y tenga tablas
+- Verificar que `mysqldump` tenga permisos para acceder a la base de datos
 
 ### El enlace "Respaldo BD" no aparece
 - Verificar que el usuario tenga el permiso `backups.manage`
-- Ejecutar el seeder de permisos
-- Asignar permiso al rol del usuario
+- Ejecutar el seeder de permisos: `php artisan db:seed --class=PermissionSeeder`
+- Asignar permiso al rol del usuario desde la interfaz de administración
 
 ## Limitaciones y Mejoras Futuras
 
 ### Limitaciones Actuales
 - Solo un respaldo almacenado a la vez
-- Ruta de mysqldump hardcodeada para Windows/XAMPP
 - No incluye compresión de archivos
+- Requiere que `mysqldump` esté disponible en el servidor
 
-### Mejoras Sugeridas
-1. **Compresión automática**: Usar gzip para reducir tamaño
-2. **Múltiples respaldos**: Sistema de rotación con fechas
-3. **Configuración flexible**: Ruta de mysqldump configurable
-4. **Notificaciones**: Email al completar respaldo
-5. **Respaldo programado**: Tareas programadas (cron)
+### Mejoras Implementadas ✅
+1. **Configuración flexible**: Ruta de mysqldump configurable mediante variable de entorno
+2. **Compatibilidad multiplataforma**: Funciona en Windows, Linux y contenedores Docker
+3. **Búsqueda automática**: Busca `mysqldump` en rutas comunes y PATH del sistema
+
+### Mejoras Sugeridas para Futuras Versiones
+1. **Compresión automática**: Usar gzip para reducir tamaño de archivos
+2. **Múltiples respaldos**: Sistema de rotación con fechas y retención configurable
+3. **Notificaciones**: Email al completar respaldo exitosamente
+4. **Respaldo programado**: Tareas programadas (cron) para respaldos automáticos
+5. **Respaldo remoto**: Opción para enviar respaldos a almacenamiento en la nube (S3, etc.)
+6. **Verificación de integridad**: Checksum para verificar que el respaldo no esté corrupto
 
 ## Créditos
 Sistema desarrollado para el proyecto Laravel 12 - Sistema de Acueducto
