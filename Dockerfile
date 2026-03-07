@@ -38,7 +38,7 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
         pcntl \
         xml \
         intl
-
+RUN apt-get update && apt-get install -y default-mysql-client
 # ============================================
 # Instalar Node.js 20 (para Vite build)
 # ============================================
