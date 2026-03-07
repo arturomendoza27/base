@@ -30,8 +30,17 @@ class BackupController extends Controller
         try {
             // Validar que mysqldump esté disponible
             if (!$this->isMysqldumpAvailable()) {
+                $errorMessage = 'El comando mysqldump no está disponible en el servidor.';
+                
+                // Agregar instrucciones específicas según el sistema operativo
+                if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+                    $errorMessage .= ' En Windows, instale XAMPP o MySQL y agregue la ruta de mysqldump al PATH, o configure MYSQLDUMP_PATH en el archivo .env.';
+                } else {
+                    $errorMessage .= ' En Linux/Ubuntu, instálelo con: sudo apt-get update && sudo apt-get install mysql-client';
+                }
+                
                 return back()->withErrors([
-                    'error' => 'El comando mysqldump no está disponible en el servidor.'
+                    'error' => $errorMessage
                 ]);
             }
 

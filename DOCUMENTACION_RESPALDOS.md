@@ -106,6 +106,7 @@ El sistema busca automáticamente `mysqldump` en las siguientes ubicaciones:
 
 ### 3. Pasos de Instalación
 
+#### Para desarrollo local (Windows con XAMPP):
 ```bash
 # Ejecutar migraciones (si es necesario)
 php artisan migrate
@@ -116,11 +117,37 @@ php artisan db:seed --class=PermissionSeeder
 # Crear directorio de respaldos (si no existe)
 mkdir -p storage/app/backups
 
-# Asignar permisos de escritura
-chmod 775 storage/app/backups
-
 # Asignar permiso a roles existentes (opcional)
 # Desde la interfaz de administración de roles
+```
+
+#### Para producción (Ubuntu/Dokploy):
+```bash
+# 1. Instalar mysql-client (contiene mysqldump)
+sudo apt-get update
+sudo apt-get install mysql-client -y
+
+# 2. Verificar que mysqldump esté disponible
+which mysqldump
+
+# 3. Configurar variable de entorno en .env
+# Agregar la siguiente línea:
+MYSQLDUMP_PATH="mysqldump"
+
+# 4. Crear directorio de respaldos y asignar permisos
+mkdir -p storage/app/backups
+chmod 775 storage/app/backups
+chown www-data:www-data storage/app/backups  # Ajustar usuario según configuración
+
+# 5. Ejecutar migraciones y seeders
+php artisan migrate --force
+php artisan db:seed --class=PermissionSeeder --force
+```
+
+#### Para contenedores Docker:
+```dockerfile
+# En el Dockerfile de la aplicación, agregar:
+RUN apt-get update && apt-get install -y mysql-client
 ```
 
 ### 4. Configuración en `.env`
