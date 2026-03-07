@@ -76,91 +76,140 @@ class BackupController extends Controller
             // Construir el comando mysqldump con ruta obtenida dinámicamente
             $mysqldumpPath = $this->getMysqldumpPath();
             
-            // Opciones adicionales para resolver problemas comunes
-            $additionalOptions = [];
+            // Definir diferentes conjuntos de opciones para intentar
+            $optionsSets = [];
             
-            // Para problemas de autenticación caching_sha2_password en MySQL 8+ (especialmente en Windows/XAMPP)
-            // Nota: MariaDB (XAMPP) no soporta --ssl-mode=DISABLED, así que lo omitimos
-            if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-                // Solo agregar --default-auth=mysql_native_password para problemas de autenticación
-                $additionalOptions[] = '--default-auth=mysql_native_password';
-            }
+            // Conjunto 1: Con SSL deshabilitado (para errores de certificado)
+            $optionsSets[] = [
+                '--default-auth=mysql_native_password',
+                '--ssl-mode=DISABLED',
+                '--single-transaction',
+                '--routines',
+                '--triggers'
+            ];
             
-            // Para todos los sistemas, agregar opciones útiles (pero compatibles)
-            $additionalOptions[] = '--single-transaction';
-            $additionalOptions[] = '--routines';
-            $additionalOptions[] = '--triggers';
-            // Nota: --events puede causar problemas en algunas versiones, lo omitimos por ahora
+            // Conjunto 2: Sin SSL (para MariaDB que no soporta --ssl-mode)
+            $optionsSets[] = [
+                '--default-auth=mysql_native_password',
+                '--single-transaction',
+                '--routines',
+                '--triggers'
+            ];
             
-            // Construir el comando de forma más robusta
-            $commandParts = [$mysqldumpPath];
+            // Conjunto 3: Mínimo (solo lo esencial)
+            $optionsSets[] = [
+                '--default-auth=mysql_native_password',
+                '--single-transaction'
+            ];
             
-            // Agregar opciones si existen
-            if (!empty($additionalOptions)) {
-                $commandParts = array_merge($commandParts, $additionalOptions);
-            }
+            // Conjunto 4: Sin opciones específicas de Windows
+            $optionsSets[] = [
+                '--single-transaction',
+                '--routines',
+                '--triggers'
+            ];
             
-            // Agregar parámetros de conexión
-            $commandParts[] = '--host=' . escapeshellarg($dbHost);
-            $commandParts[] = '--port=' . escapeshellarg($dbPort);
-            $commandParts[] = '--user=' . escapeshellarg($dbUser);
-            $commandParts[] = '--password=' . escapeshellarg($dbPass);
-            $commandParts[] = escapeshellarg($dbName);
+            // Conjunto 5: Absolutamente mínimo
+            $optionsSets[] = [];
             
-            // Redireccionar salida al archivo (sin comillas extra alrededor del path)
-            $commandParts[] = '>' . escapeshellarg($backupPath);
+            $lastError = '';
+            $lastOutput = [];
+            $lastReturnVar = 0;
             
-            $command = implode(' ', $commandParts);
-
-            // Ejecutar el comando con logging detallado
-            $output = [];
-            $returnVar = 0;
-            
-            Log::info('Ejecutando comando mysqldump', [
-                'command' => $command,
-                'mysqldump_path' => $mysqldumpPath,
-                'db_host' => $dbHost,
-                'db_port' => $dbPort,
-                'db_name' => $dbName
-            ]);
-            
-            exec($command . ' 2>&1', $output, $returnVar);
-
-            if ($returnVar !== 0) {
-                Log::error('Error al generar respaldo', [
+            // Intentar con cada conjunto de opciones
+            foreach ($optionsSets as $optionSet) {
+                // Construir el comando con este conjunto de opciones
+                $commandParts = [$mysqldumpPath];
+                
+                // Agregar opciones si existen
+                if (!empty($optionSet)) {
+                    $commandParts = array_merge($commandParts, $optionSet);
+                }
+                
+                // Agregar parámetros de conexión
+                $commandParts[] = '--host=' . escapeshellarg($dbHost);
+                $commandParts[] = '--port=' . escapeshellarg($dbPort);
+                $commandParts[] = '--user=' . escapeshellarg($dbUser);
+                $commandParts[] = '--password=' . escapeshellarg($dbPass);
+                $commandParts[] = escapeshellarg($dbName);
+                
+                // Redireccionar salida al archivo
+                $commandParts[] = '>' . escapeshellarg($backupPath);
+                
+                $command = implode(' ', $commandParts);
+                
+                // Ejecutar el comando
+                $output = [];
+                $returnVar = 0;
+                
+                Log::info('Intentando comando mysqldump', [
                     'command' => $command,
-                    'output' => $output,
-                    'return_var' => $returnVar,
-                    'mysqldump_path' => $mysqldumpPath,
-                    'db_host' => $dbHost,
-                    'db_port' => $dbPort,
-                    'db_name' => $dbName,
-                    'db_user' => $dbUser
+                    'option_set' => $optionSet,
+                    'attempt' => array_search($optionSet, $optionsSets) + 1
                 ]);
                 
-                // Construir mensaje de error más informativo
-                $errorMessage = 'Error al generar el respaldo. ';
+                exec($command . ' 2>&1', $output, $returnVar);
                 
-                if (!empty($output)) {
-                    $errorMessage .= 'Detalles: ' . implode("\n", array_slice($output, 0, 5)); // Mostrar solo primeros 5 líneas
-                } else {
-                    $errorMessage .= 'No se obtuvo salida del comando. ';
+                // Guardar el último error para referencia
+                $lastError = implode("\n", array_slice($output, 0, 3));
+                $lastOutput = $output;
+                $lastReturnVar = $returnVar;
+                
+                // Si el comando fue exitoso, salir del bucle
+                if ($returnVar === 0) {
+                    // Verificar que el archivo no esté vacío y contenga datos reales
+                    if (file_exists($backupPath) && filesize($backupPath) > 100) {
+                        $fileContent = file_get_contents($backupPath, false, null, 0, 500);
+                        if (str_contains($fileContent, 'CREATE TABLE') || str_contains($fileContent, 'INSERT INTO')) {
+                            Log::info('Respaldo generado exitosamente con opciones', ['option_set' => $optionSet]);
+                            break;
+                        } else {
+                            // El archivo existe pero no contiene datos de backup
+                            Log::warning('Archivo de respaldo generado pero sin datos válidos', [
+                                'file_size' => filesize($backupPath),
+                                'preview' => substr($fileContent, 0, 200)
+                            ]);
+                            // Continuar con el siguiente conjunto
+                            continue;
+                        }
+                    }
                 }
                 
-                $errorMessage .= ' (Código de error: ' . $returnVar . ')';
-                
-                // Agregar sugerencias según el código de error
-                if ($returnVar === 1) {
-                    $errorMessage .= ' Posible problema de permisos o credenciales de la base de datos.';
-                } elseif ($returnVar === 2) {
-                    $errorMessage .= ' Error de sintaxis en el comando mysqldump.';
-                } elseif ($returnVar === 127) {
-                    $errorMessage .= ' Comando mysqldump no encontrado. Verifique la instalación.';
+                // Si llegamos al final de los conjuntos y ninguno funcionó
+                if ($optionSet === end($optionsSets)) {
+                    Log::error('Todos los intentos de mysqldump fallaron', [
+                        'last_command' => $command,
+                        'last_output' => $lastOutput,
+                        'last_return_var' => $lastReturnVar
+                    ]);
+                    
+                    // Construir mensaje de error detallado
+                    $errorMessage = 'Error al generar el respaldo después de varios intentos. ';
+                    
+                    if (!empty($lastOutput)) {
+                        $errorMessage .= 'Último error: ' . implode("\n", array_slice($lastOutput, 0, 3));
+                    }
+                    
+                    $errorMessage .= ' (Código de error: ' . $lastReturnVar . ')';
+                    
+                    // Agregar diagnóstico basado en el error
+                    if (str_contains($lastError, 'SSL') || str_contains($lastError, 'TLS')) {
+                        $errorMessage .= '\nProblema de certificado SSL. Se intentó deshabilitar SSL pero no funcionó.';
+                    } elseif (str_contains($lastError, 'caching_sha2_password')) {
+                        $errorMessage .= '\nProblema de autenticación. Se intentó usar mysql_native_password pero no funcionó.';
+                    } elseif (str_contains($lastError, 'unknown variable')) {
+                        $errorMessage .= '\nOpción no soportada por esta versión de MySQL/MariaDB.';
+                    }
+                    
+                    $errorMessage .= '\n\nSolución para producción:';
+                    $errorMessage .= '\n1. Verifique que mysql-client esté instalado: sudo apt-get install mysql-client';
+                    $errorMessage .= '\n2. Pruebe conexión manual: mysql -h ' . $dbHost . ' -u ' . $dbUser . ' -p';
+                    $errorMessage .= '\n3. Revise los logs para más detalles.';
+                    
+                    return back()->withErrors([
+                        'error' => $errorMessage
+                    ]);
                 }
-                
-                return back()->withErrors([
-                    'error' => $errorMessage
-                ]);
             }
 
             // Verificar que el archivo se creó correctamente
