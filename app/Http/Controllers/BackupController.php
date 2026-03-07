@@ -72,9 +72,30 @@ class BackupController extends Controller
 
             // Construir el comando mysqldump con ruta obtenida dinámicamente
             $mysqldumpPath = $this->getMysqldumpPath();
+            
+            // Opciones adicionales para resolver problemas comunes
+            $additionalOptions = [];
+            
+            // Para problemas de autenticación caching_sha2_password en MySQL 8+ (especialmente en Windows/XAMPP)
+            if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+                // Intentar múltiples opciones para resolver problemas de autenticación
+                $additionalOptions[] = '--default-auth=mysql_native_password';
+                $additionalOptions[] = '--ssl-mode=DISABLED';
+                $additionalOptions[] = '--protocol=TCP';
+            }
+            
+            // Para todos los sistemas, agregar opciones útiles
+            $additionalOptions[] = '--single-transaction';
+            $additionalOptions[] = '--routines';
+            $additionalOptions[] = '--events';
+            $additionalOptions[] = '--triggers';
+            
+            $optionsString = implode(' ', $additionalOptions);
+            
             $command = sprintf(
-                '%s --host=%s --port=%s --user=%s --password=%s %s > "%s"',
+                '%s %s --host=%s --port=%s --user=%s --password=%s %s > "%s"',
                 $mysqldumpPath,
+                $optionsString,
                 escapeshellarg($dbHost),
                 escapeshellarg($dbPort),
                 escapeshellarg($dbUser),
@@ -83,20 +104,54 @@ class BackupController extends Controller
                 escapeshellarg($backupPath)
             );
 
-            // Ejecutar el comando
+            // Ejecutar el comando con logging detallado
             $output = [];
             $returnVar = 0;
+            
+            Log::info('Ejecutando comando mysqldump', [
+                'command' => $command,
+                'mysqldump_path' => $mysqldumpPath,
+                'db_host' => $dbHost,
+                'db_port' => $dbPort,
+                'db_name' => $dbName
+            ]);
+            
             exec($command . ' 2>&1', $output, $returnVar);
 
             if ($returnVar !== 0) {
                 Log::error('Error al generar respaldo', [
                     'command' => $command,
                     'output' => $output,
-                    'return_var' => $returnVar
+                    'return_var' => $returnVar,
+                    'mysqldump_path' => $mysqldumpPath,
+                    'db_host' => $dbHost,
+                    'db_port' => $dbPort,
+                    'db_name' => $dbName,
+                    'db_user' => $dbUser
                 ]);
                 
+                // Construir mensaje de error más informativo
+                $errorMessage = 'Error al generar el respaldo. ';
+                
+                if (!empty($output)) {
+                    $errorMessage .= 'Detalles: ' . implode("\n", array_slice($output, 0, 5)); // Mostrar solo primeros 5 líneas
+                } else {
+                    $errorMessage .= 'No se obtuvo salida del comando. ';
+                }
+                
+                $errorMessage .= ' (Código de error: ' . $returnVar . ')';
+                
+                // Agregar sugerencias según el código de error
+                if ($returnVar === 1) {
+                    $errorMessage .= ' Posible problema de permisos o credenciales de la base de datos.';
+                } elseif ($returnVar === 2) {
+                    $errorMessage .= ' Error de sintaxis en el comando mysqldump.';
+                } elseif ($returnVar === 127) {
+                    $errorMessage .= ' Comando mysqldump no encontrado. Verifique la instalación.';
+                }
+                
                 return back()->withErrors([
-                    'error' => 'Error al generar el respaldo: ' . implode("\n", $output)
+                    'error' => $errorMessage
                 ]);
             }
 
