@@ -15,12 +15,15 @@ class ClienteController extends Controller
 {
     public function index(Request $request)
     {
-        $clientes = Clientes::when($request->search, function ($query) use ($request) {
-            $query->where('nombre', 'like', "%{$request->search}%")
-                ->orWhere('email', 'like', "%{$request->search}%");
-        })
-            ->orderBy('created_at', 'desc')
-            ->latest()
+        $clientes = Clientes::query()
+            ->when($request->search, function ($query) use ($request) {
+                $query->where(function ($q) use ($request) {
+                    $q->where('nombre', 'like', "%{$request->search}%")
+                        ->orWhere('email', 'like', "%{$request->search}%");
+                });
+            })
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
             ->paginate(5)
             ->withQueryString();
 
@@ -86,21 +89,21 @@ class ClienteController extends Controller
         }
     }
 
-    public function export() 
+    public function export()
     {
         return Excel::download(new ClientesExport, 'clientes.xlsx');
     }
-    
+
     public function importar(Request $request)
     {
 
         $file = $request->file('archivo');
-   
+
         Excel::import(new ClientesImport, $file);
 
         return redirect()
-                ->route('clientes.index')
-                ->with('success', 'Clientes importados con Exito.');
+            ->route('clientes.index')
+            ->with('success', 'Clientes importados con Exito.');
     }
 
     /**
