@@ -20,16 +20,28 @@ class PrediosController extends Controller
      */
     public function index(Request $request)
     {
-        $data = Predios::with('cliente', 'barrio', 'categoria')
+        $data = Predios::with(['cliente', 'barrio', 'categoria'])
             ->when($request->search, function ($query) use ($request) {
-                $query->where('direccion_predio', 'like', "%{$request->search}%")
-                    ->orWhere('ruta', 'like', "%{$request->search}%");
-            })->orWhereRelation('cliente', 'nombre',  'like', "%{$request->search}%")
-            ->orWhereRelation('cliente', 'documento',  'like', "%{$request->search}%")
-            ->orWhereRelation('barrio', 'nombre',  'like', "%{$request->search}%")
 
-            ->orderBy('created_at', 'desc')
-            ->latest()
+                $search = "%{$request->search}%";
+
+                $query->where(function ($q) use ($search) {
+
+                    $q->where('direccion_predio', 'like', $search)
+                        ->orWhere('ruta', 'like', $search)
+
+                        ->orWhereHas('cliente', function ($q) use ($search) {
+                            $q->where('nombre', 'like', $search)
+                                ->orWhere('documento', 'like', $search);
+                        })
+
+                        ->orWhereHas('barrio', function ($q) use ($search) {
+                            $q->where('nombre', 'like', $search);
+                        });
+                });
+            })
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
             ->paginate(5)
             ->withQueryString();
 
@@ -164,7 +176,7 @@ class PrediosController extends Controller
         $barrios = Barrios::orderBy('id')
             ->get(['id', 'nombre']);
 
-            $categoria = CategoriasPredios::select('id', 'nombre')
+        $categoria = CategoriasPredios::select('id', 'nombre')
             ->orderBy('id')
             ->get();
 
