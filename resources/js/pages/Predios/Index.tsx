@@ -11,6 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { formatoPesos } from '@/lib/fomato_numeros';
+import debounce from 'lodash/debounce'
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
@@ -37,16 +38,22 @@ export default function Index({ datos, filters }: IndexProps) {
   const { data, setData } = useForm({
     search: filters.search || '',
   });
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const userInput = e.target.value.toLowerCase()
-    setData('search', userInput)
-    const queryString = userInput ? { search: userInput } : {}
+  // const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const userInput = e.target.value.toLowerCase()
+  //   setData('search', userInput)
+  //   const queryString = userInput ? { search: userInput } : {}
 
-    router.get('/predios', queryString, {
+  //   router.get('/predios', queryString, {
+  //     preserveState: true,
+  //     preserveScroll: true,
+  //   });
+  // }
+  const handleSearchChange = debounce((value) => {
+    router.get('/predios', { search: value }, {
       preserveState: true,
-      preserveScroll: true,
-    });
-  }
+      replace: true
+    })
+  }, 500)
   {/* Handle Delete */ }
   const handleDeleteConfirm = () => {
     if (idToDelete) {
@@ -66,10 +73,16 @@ export default function Index({ datos, filters }: IndexProps) {
 
     const queryString = {}
 
-     router.get('/predios', queryString, {
+    router.get('/predios', queryString, {
       preserveState: true,
       preserveScroll: true,
     });
+  }
+
+  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setData('search', value)
+    handleSearchChange(value)
   }
 
   return (
@@ -136,14 +149,14 @@ export default function Index({ datos, filters }: IndexProps) {
               <div className="relative flex-1 max-w-sm">
                 <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  id="search"
-                  type='text'
-                  name='search'
-                  placeholder="Buscar predios..."
-                  onChange={handleSearchChange}
+                  type="text"
+                  name="search"
+                  placeholder="Buscar usuarios..."
                   value={data.search}
+                  onChange={onChange}
                   className="pl-10"
                 />
+
                 <button
                   type="button"
                   onClick={handleClear}

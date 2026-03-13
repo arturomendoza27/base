@@ -20,7 +20,9 @@ class PrediosController extends Controller
      */
     public function index(Request $request)
     {
-        $data = Predios::with(['cliente', 'barrio', 'categoria'])
+        $data = Predios::query()
+            ->with(['cliente', 'barrio', 'categoria'])
+
             ->when($request->search, function ($query) use ($request) {
 
                 $search = "%{$request->search}%";
@@ -40,16 +42,18 @@ class PrediosController extends Controller
                         });
                 });
             })
-            ->orderBy('created_at', 'asc')
-            ->orderBy('id', 'asc')
+
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+
             ->paginate(5)
             ->withQueryString();
 
-        return Inertia::render('Predios/Index', [
+        return inertia('Predios/Index', [
             'datos' => $data,
             'filters' => [
-                'search' => $request->search,
-            ],
+                'search' => $request->search
+            ]
         ]);
     }
 
