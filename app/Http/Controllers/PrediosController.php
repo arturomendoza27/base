@@ -40,8 +40,8 @@ class PrediosController extends Controller
                         });
                 });
             })
-            ->orderByDesc('created_at')
-            ->orderByDesc('id')
+            ->orderBy('created_at', 'asc')
+            ->orderBy('id', 'asc')
             ->paginate(5)
             ->withQueryString();
 
