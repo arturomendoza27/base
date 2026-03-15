@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { debounce } from 'lodash';
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
@@ -33,16 +34,22 @@ export default function Index({ clientes, filters }: IndexProps) {
   const { data, setData } = useForm({
     search: filters.search || ''
   });
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const userInput = e.target.value.toLowerCase()
-    setData('search', userInput)
-    const queryString = userInput ? { search: userInput } : {}
+  // const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const userInput = e.target.value.toLowerCase()
+  //   setData('search', userInput)
+  //   const queryString = userInput ? { search: userInput } : {}
 
-    router.get('/clientes', queryString, {
-      preserveState: true,
-      preserveScroll: true,
-    });
-  }
+  //   router.get('/clientes', queryString, {
+  //     preserveState: true,
+  //     preserveScroll: true,
+  //   });
+  // }
+   const handleSearchChange = debounce((value) => {
+      router.get('/clientes', { search: value }, {
+        preserveState: true,
+        replace: true
+      })
+    }, 1000)
   {/* Handle Delete */ }
   const handleDeleteConfirm = () => {
     if (idToDelete) {

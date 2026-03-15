@@ -53,7 +53,7 @@ export default function Index({ datos, filters }: IndexProps) {
       preserveState: true,
       replace: true
     })
-  }, 500)
+  }, 1000)
   {/* Handle Delete */ }
   const handleDeleteConfirm = () => {
     if (idToDelete) {

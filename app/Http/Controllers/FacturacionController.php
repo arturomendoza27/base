@@ -470,7 +470,20 @@ class FacturacionController extends Controller
      */
     public function edit(Facturacion $facturacion)
     {
-        //
+        // Cargar la factura con sus relaciones
+        $facturacion->load(['predio.cliente', 'predio.categoria', 'predio.barrio', 'ciclo']);
+        
+        // Cargar datos necesarios para el formulario
+        $clientes = \App\Models\Clientes::where('estado', 'activo')->get();
+        $predios = \App\Models\Predios::with('categoria', 'cliente', 'barrio')->get();
+        $ciclos = \App\Models\CiclosFacturacion::all();
+
+        return Inertia::render('Facturacion/Edit', [
+            'factura' => $facturacion,
+            'clientes' => $clientes,
+            'predios' => $predios,
+            'ciclos' => $ciclos,
+        ]);
     }
 
     /**
@@ -478,7 +491,100 @@ class FacturacionController extends Controller
      */
     public function update(Request $request, Facturacion $facturacion)
     {
-        //
+        DB::beginTransaction();
+
+        try {
+            // Validar datos requeridos
+            $validated = $request->validate([
+                'predio_id' => 'required|exists:predios,id',
+                'ciclo_id' => 'required|exists:ciclos_facturacion,id',
+                'cliente_id' => 'required|exists:clientes,id',
+                'fecha_emision' => 'required|date',
+                'fecha_vencimiento' => 'required|date',
+                'concepto' => 'required|string',
+                'saldo_anterior' => 'nullable|numeric|min:0',
+                'saldo_actual' => 'required|numeric|min:0',
+                'saldo_conexion' => 'nullable|numeric|min:0',
+                'saldo_reconexion' => 'nullable|numeric|min:0',
+                'total_factura' => 'required|numeric',
+                'estado' => 'required|in:pendiente,pagada,vencida,anulada,abono',
+                'observaciones' => 'nullable|string',
+            ]);
+
+            // Obtener el predio
+            $predio = Predios::with('categoria')->find($request->predio_id);
+            
+            if (!$predio) {
+                return redirect()
+                    ->route('facturacion.edit', $facturacion->id)
+                    ->with('error', 'El predio no existe.');
+            }
+
+            // Obtener la tarifa vigente según la categoría del predio
+            $fechaActual = Carbon::now();
+            $tarifa = Tarifas::where('categoria_id', $predio->categoria_id)
+                ->where('estado', 'activa')
+                ->whereDate('vigente_desde', '<=', $fechaActual)
+                ->where(function ($query) use ($fechaActual) {
+                    $query->whereNull('vigente_hasta')
+                        ->orWhereDate('vigente_hasta', '>=', $fechaActual);
+                })
+                ->first();
+
+            // Actualizar la factura
+            $facturacion->update([
+                'ciclo_id' => $request->ciclo_id,
+                'predio_id' => $request->predio_id,
+                'cliente_id' => $request->cliente_id,
+                'categoria_id' => $predio->categoria_id,
+                'tarifa_id' => $tarifa ? $tarifa->id : $facturacion->tarifa_id,
+                'fecha_emision' => $request->fecha_emision,
+                'fecha_vencimiento' => $request->fecha_vencimiento,
+                'concepto' => $request->concepto,
+                'saldo_anterior' => $request->saldo_anterior ?? 0,
+                'saldo_actual' => $request->saldo_actual,
+                'saldo_conexion' => $request->saldo_conexion ?? 0,
+                'saldo_reconexion' => $request->saldo_reconexion ?? 0,
+                'total_factura' => $request->total_factura,
+                'estado' => $request->estado,
+                'observaciones' => $request->observaciones,
+            ]);
+
+            // Si el estado cambia a pagada, actualizar el estado del servicio del predio
+            if ($request->estado === 'pagada') {
+                $predio->update(['estado_servicio' => 'activo']);
+            }
+
+            DB::commit();
+
+            // Registrar actividad
+            activity('facturacion_edicion')
+                ->performedOn($facturacion)
+                ->causedBy(Auth::user())
+                ->withProperties([
+                    'predio_id' => $predio->id,
+                    'ciclo_id' => $request->ciclo_id,
+                    'total_factura' => $request->total_factura,
+                    'estado' => $request->estado,
+                ])
+                ->log("Factura #{$facturacion->id} actualizada para el predio {$predio->matricula_predial}");
+
+            return redirect()
+                ->route('facturacion.index')
+                ->with('success', 'Factura actualizada exitosamente.');
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            return redirect()
+                ->route('facturacion.edit', $facturacion->id)
+                ->withErrors($e->validator)
+                ->withInput();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()
+                ->route('facturacion.edit', $facturacion->id)
+                ->with('error', 'Error al actualizar la factura: ' . $e->getMessage());
+        }
     }
 
     /**
